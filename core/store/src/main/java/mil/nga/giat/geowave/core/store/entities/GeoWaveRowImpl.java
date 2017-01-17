@@ -8,17 +8,51 @@ public class GeoWaveRowImpl implements
 	protected final byte[] dataId;
 	protected final byte[] adapterId;
 	protected final byte[] index;
-	protected final byte[] value;
-	protected final byte[] fieldMask;
-	protected final int numberOfDuplicates;
-	
+	protected byte[] value = null;
+	protected byte[] fieldMask = null;
+	protected int numberOfDuplicates = 0;
+
+	public GeoWaveRowImpl(
+			final byte[] rowId ) {
+		this(
+				rowId,
+				null,
+				null);
+	}
+
+	public GeoWaveRowImpl(
+			byte[] rowId,
+			int offset,
+			short length ) {
+		this(
+				rowId,
+				offset,
+				length,
+				null,
+				null);
+	}
+
 	public GeoWaveRowImpl(
 			final byte[] rowId,
 			final byte[] fieldMask,
 			final byte[] value ) {
+		this(
+				rowId,
+				0,
+				rowId.length,
+				fieldMask,
+				value);
+	}
+
+	public GeoWaveRowImpl(
+			final byte[] rowId,
+			int offset,
+			int length,
+			final byte[] fieldMask,
+			final byte[] value ) {
 		final ByteBuffer metadataBuf = ByteBuffer.wrap(
 				rowId,
-				rowId.length - 12,
+				length + offset - 12,
 				12);
 		final int adapterIdLength = metadataBuf.getInt();
 		final int dataIdLength = metadataBuf.getInt();
@@ -26,20 +60,23 @@ public class GeoWaveRowImpl implements
 
 		final ByteBuffer buf = ByteBuffer.wrap(
 				rowId,
-				0,
-				rowId.length - 12);
-		final byte[] index = new byte[rowId.length - 12 - adapterIdLength - dataIdLength];
+				offset,
+				length - 12);
+		final byte[] index = new byte[length - 12 - adapterIdLength - dataIdLength];
 		final byte[] adapterId = new byte[adapterIdLength];
 		final byte[] dataId = new byte[dataIdLength];
-		buf.get(index);
-		buf.get(adapterId);
-		buf.get(dataId);
+		buf.get(
+				index);
+		buf.get(
+				adapterId);
+		buf.get(
+				dataId);
 
 		this.dataId = dataId;
 		this.adapterId = adapterId;
 		this.index = index;
 		this.numberOfDuplicates = numberOfDuplicates;
-		
+
 		this.fieldMask = fieldMask;
 		this.value = value;
 	}
@@ -58,16 +95,37 @@ public class GeoWaveRowImpl implements
 		this.value = value;
 		this.numberOfDuplicates = numberOfDuplicates;
 	}
-	
+
+	public GeoWaveRowImpl(
+			byte[] dataId,
+			byte[] adapterId,
+			byte[] index,
+			int numberOfDuplicates ) {
+		this(
+				dataId,
+				adapterId,
+				index,
+				null,
+				null,
+				numberOfDuplicates);
+	}
+
 	public byte[] getRowId() {
-		final ByteBuffer buf = ByteBuffer.allocate(12 + dataId.length + adapterId.length + index.length);
-		buf.put(index);
-		buf.put(adapterId);
-		buf.put(dataId);
-		buf.putInt(adapterId.length);
-		buf.putInt(dataId.length);
-		buf.putInt(numberOfDuplicates);
-		
+		final ByteBuffer buf = ByteBuffer.allocate(
+				12 + dataId.length + adapterId.length + index.length);
+		buf.put(
+				index);
+		buf.put(
+				adapterId);
+		buf.put(
+				dataId);
+		buf.putInt(
+				adapterId.length);
+		buf.putInt(
+				dataId.length);
+		buf.putInt(
+				numberOfDuplicates);
+
 		return buf.array();
 	}
 
@@ -95,9 +153,13 @@ public class GeoWaveRowImpl implements
 	public byte[] getValue() {
 		return value;
 	}
-	
+
 	@Override
 	public int getNumberOfDuplicates() {
 		return numberOfDuplicates;
+	}
+
+	public boolean isDeduplicationEnabled() {
+		return numberOfDuplicates >= 0;
 	}
 }

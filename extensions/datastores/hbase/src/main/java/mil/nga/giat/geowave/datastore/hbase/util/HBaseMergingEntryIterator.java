@@ -24,7 +24,7 @@ import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter.RowTransform;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
-import mil.nga.giat.geowave.core.store.entities.GeowaveRowId;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRowImpl;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
@@ -76,7 +76,7 @@ public class HBaseMergingEntryIterator<T> extends
 		}
 		peekedValue = null;
 
-		final GeowaveRowId rowId = new GeowaveRowId(
+		final GeoWaveRowImpl rowId = new GeoWaveRowImpl(
 				nextResult.getRow());
 		final ByteArrayId adapterId = new ByteArrayId(
 				rowId.getAdapterId());
@@ -91,7 +91,7 @@ public class HBaseMergingEntryIterator<T> extends
 			// Peek ahead to see if it needs to be merged with the next result
 			while (scannerIt.hasNext()) {
 				peekedValue = (Result) scannerIt.next();
-				final GeowaveRowId nextRowId = new GeowaveRowId(
+				final GeoWaveRowImpl nextRowId = new GeoWaveRowImpl(
 						peekedValue.getRow());
 
 				if (HBaseUtils.rowIdsMatch(
@@ -135,9 +135,9 @@ public class HBaseMergingEntryIterator<T> extends
 							final Result row1,
 							final Result row2 ) {
 
-						final ByteBuffer buf1 = ByteBuffer.wrap(new GeowaveRowId(
+						final ByteBuffer buf1 = ByteBuffer.wrap(new GeoWaveRowImpl(
 								row1.getRow()).getDataId());
-						final ByteBuffer buf2 = ByteBuffer.wrap(new GeowaveRowId(
+						final ByteBuffer buf2 = ByteBuffer.wrap(new GeoWaveRowImpl(
 								row2.getRow()).getDataId());
 						buf1.get();
 						buf2.get();

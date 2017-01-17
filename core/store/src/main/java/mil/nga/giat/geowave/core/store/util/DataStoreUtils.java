@@ -47,9 +47,8 @@ import mil.nga.giat.geowave.core.store.data.field.FieldWriter;
 import mil.nga.giat.geowave.core.store.data.visibility.UnconstrainedVisibilityHandler;
 import mil.nga.giat.geowave.core.store.data.visibility.UniformVisibilityWriter;
 import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
-import mil.nga.giat.geowave.core.store.entities.GeowaveRowId;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
-import mil.nga.giat.geowave.core.store.entities.NativeGeoWaveRowFactory;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRowImpl;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.flatten.BitmaskUtils;
 import mil.nga.giat.geowave.core.store.flatten.BitmaskedFieldInfoComparator;
@@ -659,7 +658,7 @@ public class DataStoreUtils
 			final ScanCallback<T, R> scanCallback ) {
 		final byte[] dataId = row.getDataId();
 		final byte[] adapterId = row.getAdapterId();
-		final GeowaveRowId rowId = new GeowaveRowId(
+		final GeoWaveRowImpl rowId = new GeoWaveRowImpl(
 				row.getIndex(),
 				dataId,
 				adapterId,
@@ -675,7 +674,7 @@ public class DataStoreUtils
 
 	private static <T, R extends GeoWaveRow> Object decodeRowObj(
 			final R row,
-			final GeowaveRowId rowId,
+			final GeoWaveRowImpl rowId,
 			final AdapterStore adapterStore,
 			final QueryFilter clientFilter,
 			final PrimaryIndex index,
@@ -695,7 +694,7 @@ public class DataStoreUtils
 	@SuppressWarnings("unchecked")
 	public static <T, R extends GeoWaveRow> Pair<T, DataStoreEntryInfo> decodeRow(
 			final R row,
-			final GeowaveRowId rowId,
+			final GeoWaveRowImpl rowId,
 			DataAdapter<T> dataAdapter,
 			final AdapterStore adapterStore,
 			final QueryFilter clientFilter,
@@ -846,7 +845,7 @@ public class DataStoreUtils
 				new ByteArrayId(
 						rowId.getDataId()),
 				new ByteArrayId(
-						rowId.getInsertionId()),
+						rowId.getIndex()),
 				rowId.getNumberOfDuplicates(),
 				indexData,
 				unknownData,
@@ -863,10 +862,10 @@ public class DataStoreUtils
 							rowId.getDataId(),
 							Arrays.asList(
 									new ByteArrayId(
-											rowId.getInsertionId())),
+											rowId.getIndex())),
 							Arrays.asList(
 									new ByteArrayId(
-											rowId.getInsertionId())),
+											rowId.getIndex())),
 							fieldInfoList));
 			if (scanCallback != null) {
 				scanCallback.entryScanned(

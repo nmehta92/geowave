@@ -22,7 +22,7 @@ import mil.nga.giat.geowave.core.store.data.PersistentDataset;
 import mil.nga.giat.geowave.core.store.data.PersistentValue;
 import mil.nga.giat.geowave.core.store.data.field.FieldReader;
 import mil.nga.giat.geowave.core.store.dimension.NumericDimensionField;
-import mil.nga.giat.geowave.core.store.entities.GeowaveRowId;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRowImpl;
 import mil.nga.giat.geowave.core.store.filter.DistributableQueryFilter;
 import mil.nga.giat.geowave.core.store.flatten.FlattenedDataSet;
 import mil.nga.giat.geowave.core.store.flatten.FlattenedFieldInfo;
@@ -196,7 +196,7 @@ public class HBaseDistributableFilter extends
 			final Cell cell,
 			final PersistentDataset<CommonIndexValue> commonData,
 			final FlattenedUnreadData unreadData ) {
-		final GeowaveRowId rowId = new GeowaveRowId(
+		final GeoWaveRowImpl rowId = new GeoWaveRowImpl(
 				CellUtil.cloneRow(cell));
 
 		return new HBaseCommonIndexedPersistenceEncoding(
@@ -205,7 +205,7 @@ public class HBaseDistributableFilter extends
 				new ByteArrayId(
 						rowId.getDataId()),
 				new ByteArrayId(
-						rowId.getInsertionId()),
+						rowId.getIndex()),
 				rowId.getNumberOfDuplicates(),
 				commonData,
 				unreadData);

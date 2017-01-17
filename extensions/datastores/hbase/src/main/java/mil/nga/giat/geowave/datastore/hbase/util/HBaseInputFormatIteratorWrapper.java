@@ -10,7 +10,7 @@ import org.apache.hadoop.hbase.client.Result;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
-import mil.nga.giat.geowave.core.store.entities.GeowaveRowId;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRowImpl;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.mapreduce.HadoopWritableSerializationTool;
@@ -69,7 +69,7 @@ public class HBaseInputFormatIteratorWrapper<T> implements
 			final Result row,
 			final QueryFilter clientFilter,
 			final PrimaryIndex index ) {
-		final GeowaveRowId rowId = new GeowaveRowId(
+		final GeoWaveRowImpl rowId = new GeoWaveRowImpl(
 				row.getRow());
 
 		final Object value = HBaseUtils.decodeRow(
@@ -98,10 +98,10 @@ public class HBaseInputFormatIteratorWrapper<T> implements
 						rowId.isDeduplicationEnabled() ? rowId.getDataId() : ArrayUtils.addAll(
 								ArrayUtils.addAll(
 										index.getId().getBytes(),
-										rowId.getInsertionId()),
+										rowId.getIndex()),
 								rowId.getDataId())));
 		key.setInsertionId(new ByteArrayId(
-				rowId.getInsertionId()));
+				rowId.getIndex()));
 		return new GeoWaveInputFormatEntry(
 				key,
 				result);

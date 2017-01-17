@@ -35,8 +35,7 @@ import mil.nga.giat.geowave.core.store.data.PersistentValue;
 import mil.nga.giat.geowave.core.store.data.VisibilityWriter;
 import mil.nga.giat.geowave.core.store.data.visibility.UnconstrainedVisibilityHandler;
 import mil.nga.giat.geowave.core.store.data.visibility.UniformVisibilityWriter;
-import mil.nga.giat.geowave.core.store.entities.GeowaveRowId;
-import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRowImpl;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.flatten.BitmaskUtils;
 import mil.nga.giat.geowave.core.store.index.CommonIndexModel;
@@ -201,7 +200,7 @@ public class HBaseUtils
 			final byte[] fieldSubsetBitmask,
 			final boolean decodeRow ) {
 
-		final GeowaveRowId rowId = new GeowaveRowId(
+		final GeoWaveRowImpl rowId = new GeoWaveRowImpl(
 				row.getRow());
 		return (T) decodeRowObj(
 				row,
@@ -217,7 +216,7 @@ public class HBaseUtils
 
 	public static Object decodeRow(
 			final Result row,
-			final GeowaveRowId rowId,
+			final GeoWaveRowImpl rowId,
 			final AdapterStore adapterStore,
 			final QueryFilter clientFilter,
 			final PrimaryIndex index,
@@ -236,7 +235,7 @@ public class HBaseUtils
 
 	private static Object decodeRowObj(
 			final Result row,
-			final GeowaveRowId rowId,
+			final GeoWaveRowImpl rowId,
 			final DataAdapter dataAdapter,
 			final AdapterStore adapterStore,
 			final QueryFilter clientFilter,
@@ -260,7 +259,7 @@ public class HBaseUtils
 	@SuppressWarnings("unchecked")
 	public static Pair<Object, DataStoreEntryInfo> decodeRow(
 			final Result row,
-			final GeowaveRowId rowId,
+			final GeoWaveRowImpl rowId,
 			final DataAdapter dataAdapter,
 			final AdapterStore adapterStore,
 			final QueryFilter clientFilter,
@@ -351,7 +350,7 @@ public class HBaseUtils
 				new ByteArrayId(
 						rowId.getDataId()),
 				new ByteArrayId(
-						rowId.getInsertionId()),
+						rowId.getIndex()),
 				rowId.getNumberOfDuplicates(),
 				indexData,
 				unknownData,
@@ -372,7 +371,7 @@ public class HBaseUtils
 						new DataStoreEntryInfo(
 								rowId.getDataId(),
 								Arrays.asList(new ByteArrayId(
-										rowId.getInsertionId())),
+										rowId.getIndex())),
 								Arrays.asList(new ByteArrayId(
 										row.getRow())),
 								fieldInfoList));
@@ -489,8 +488,8 @@ public class HBaseUtils
 	}
 
 	public static boolean rowIdsMatch(
-			final GeowaveRowId rowId1,
-			final GeowaveRowId rowId2 ) {
+			final GeoWaveRowImpl rowId1,
+			final GeoWaveRowImpl rowId2 ) {
 
 		if (!Arrays.equals(
 				rowId1.getAdapterId(),
@@ -512,7 +511,7 @@ public class HBaseUtils
 	public static byte[] removeUniqueId(
 			final byte[] row ) {
 
-		final GeowaveRowId rowId = new GeowaveRowId(
+		final GeoWaveRowImpl rowId = new GeoWaveRowImpl(
 				row);
 		byte[] dataId = rowId.getDataId();
 
@@ -525,8 +524,8 @@ public class HBaseUtils
 				0,
 				dataId.length - UNIQUE_ADDED_BYTES);
 
-		return new GeowaveRowId(
-				rowId.getInsertionId(),
+		return new GeoWaveRowImpl(
+				rowId.getIndex(),
 				dataId,
 				rowId.getAdapterId(),
 				rowId.getNumberOfDuplicates()).getRowId();
