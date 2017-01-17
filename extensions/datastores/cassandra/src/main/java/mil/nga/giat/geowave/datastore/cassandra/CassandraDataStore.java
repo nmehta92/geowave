@@ -16,10 +16,13 @@ import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DuplicateEntryCount;
 import mil.nga.giat.geowave.core.store.base.BaseDataStore;
+import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
+import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo.FieldInfo;
 import mil.nga.giat.geowave.core.store.base.Deleter;
 import mil.nga.giat.geowave.core.store.callback.IngestCallback;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
 import mil.nga.giat.geowave.core.store.data.visibility.DifferingFieldVisibilityEntryCount;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.filter.DedupeFilter;
 import mil.nga.giat.geowave.core.store.index.IndexMetaDataSet;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
@@ -245,6 +248,16 @@ public class CassandraDataStore extends
 			final PrimaryIndex index ) {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	protected Iterable<GeoWaveRow> getRowsFromIngest(
+			byte[] adapterId,
+			DataStoreEntryInfo ingestInfo,
+			List<FieldInfo<?>> fieldInfoList,
+			boolean ensureUniqueId ) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

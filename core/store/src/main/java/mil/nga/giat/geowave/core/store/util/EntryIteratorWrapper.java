@@ -5,7 +5,7 @@ import java.util.NoSuchElementException;
 
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
-import mil.nga.giat.geowave.core.store.entities.NativeGeoWaveRow;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
@@ -25,7 +25,7 @@ public abstract class EntryIteratorWrapper<T> implements
 	protected final PrimaryIndex index;
 	protected final Iterator scannerIt;
 	protected final QueryFilter clientFilter;
-	protected final ScanCallback<T, ? extends NativeGeoWaveRow> scanCallback;
+	protected final ScanCallback<T, ? extends GeoWaveRow> scanCallback;
 	protected final boolean wholeRowEncoding;
 
 	protected T nextValue;
@@ -36,7 +36,7 @@ public abstract class EntryIteratorWrapper<T> implements
 			final PrimaryIndex index,
 			final Iterator scannerIt,
 			final QueryFilter clientFilter,
-			final ScanCallback<T, ? extends NativeGeoWaveRow> scanCallback ) {
+			final ScanCallback<T, ? extends GeoWaveRow> scanCallback ) {
 		this.adapterStore = adapterStore;
 		this.index = index;
 		this.scannerIt = scannerIt;

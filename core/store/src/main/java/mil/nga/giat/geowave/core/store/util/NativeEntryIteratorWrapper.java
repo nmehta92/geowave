@@ -6,7 +6,7 @@ import org.apache.log4j.Logger;
 
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
-import mil.nga.giat.geowave.core.store.entities.NativeGeoWaveRow;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
@@ -35,7 +35,7 @@ public class NativeEntryIteratorWrapper<T> extends
 			final PrimaryIndex index,
 			final Iterator scannerIt,
 			final QueryFilter clientFilter,
-			final ScanCallback<T, ? extends NativeGeoWaveRow> scanCallback,
+			final ScanCallback<T, ? extends GeoWaveRow> scanCallback,
 			final boolean decodePersistenceEncoding ) {
 		super(
 				false,
@@ -52,9 +52,9 @@ public class NativeEntryIteratorWrapper<T> extends
 			final QueryFilter clientFilter,
 			final PrimaryIndex index,
 			final boolean wholeRowEncoding ) {
-		NativeGeoWaveRow entry = null;
+		GeoWaveRow entry = null;
 		try {
-			entry = (NativeGeoWaveRow) row;
+			entry = (GeoWaveRow) row;
 		}
 		catch (final ClassCastException e) {
 			LOGGER.error("Row is not a native geowave row entry.");
@@ -65,6 +65,6 @@ public class NativeEntryIteratorWrapper<T> extends
 				adapterStore,
 				clientFilter,
 				index,
-				(ScanCallback<T, NativeGeoWaveRow>) scanCallback);
+				(ScanCallback<T, GeoWaveRow>) scanCallback);
 	}
 }

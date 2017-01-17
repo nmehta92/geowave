@@ -18,8 +18,8 @@ import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter.RowTransform;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
-import mil.nga.giat.geowave.core.store.entities.NativeGeoWaveRow;
-import mil.nga.giat.geowave.core.store.entities.NativeGeoWaveRowImpl;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRowImpl;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 
@@ -31,14 +31,14 @@ public class MergingEntryIterator<T> extends
 	private final Map<ByteArrayId, RowMergingDataAdapter> mergingAdapters;
 	private final Map<ByteArrayId, RowTransform> transforms;
 
-	private NativeGeoWaveRow peekedValue;
+	private GeoWaveRow peekedValue;
 
 	public MergingEntryIterator(
 			final AdapterStore adapterStore,
 			final PrimaryIndex index,
-			final Iterator<NativeGeoWaveRow> scannerIt,
+			final Iterator<GeoWaveRow> scannerIt,
 			final QueryFilter clientFilter,
-			final ScanCallback<T, NativeGeoWaveRow> scanCallback,
+			final ScanCallback<T, GeoWaveRow> scanCallback,
 			final Map<ByteArrayId, RowMergingDataAdapter> mergingAdapters ) {
 		super(
 				adapterStore,
@@ -56,12 +56,12 @@ public class MergingEntryIterator<T> extends
 
 		// Get next result from scanner
 		// We may have already peeked at it
-		NativeGeoWaveRow nextResult = null;
+		GeoWaveRow nextResult = null;
 		if (peekedValue != null) {
 			nextResult = peekedValue;
 		}
 		else {
-			nextResult = (NativeGeoWaveRow) scannerIt.next();
+			nextResult = (GeoWaveRow) scannerIt.next();
 		}
 		peekedValue = null;
 
@@ -69,7 +69,7 @@ public class MergingEntryIterator<T> extends
 				nextResult.getAdapterId());
 		final RowMergingDataAdapter mergingAdapter = mergingAdapters.get(adapterId);
 
-		final ArrayList<NativeGeoWaveRow> resultsToMerge = new ArrayList<NativeGeoWaveRow>();
+		final ArrayList<GeoWaveRow> resultsToMerge = new ArrayList<GeoWaveRow>();
 
 		if ((mergingAdapter != null) && (mergingAdapter.getTransform() != null)) {
 
@@ -77,7 +77,7 @@ public class MergingEntryIterator<T> extends
 
 			// Peek ahead to see if it needs to be merged with the next result
 			while (scannerIt.hasNext()) {
-				peekedValue = (NativeGeoWaveRow) scannerIt.next();
+				peekedValue = (GeoWaveRow) scannerIt.next();
 
 				if (DataStoreUtils.rowIdsMatch(
 						nextResult,
@@ -102,29 +102,30 @@ public class MergingEntryIterator<T> extends
 		return nextResult;
 	}
 
-	private NativeGeoWaveRow mergeResults(
+	private GeoWaveRow mergeResults(
 			final RowMergingDataAdapter mergingAdapter,
-			final ArrayList<NativeGeoWaveRow> resultsToMerge ) {
+			final ArrayList<GeoWaveRow> resultsToMerge ) {
 		if (resultsToMerge.isEmpty()) {
 			return null;
 		}
 		else if (resultsToMerge.size() == 1) {
-			final NativeGeoWaveRow row = resultsToMerge.get(0);
-			return new NativeGeoWaveRowImpl(
+			final GeoWaveRow row = resultsToMerge.get(0);
+			return new GeoWaveRowImpl(
 					row.getDataId(),
 					row.getAdapterId(),
 					DataStoreUtils.removeUniqueId(row.getIndex()),
 					row.getFieldMask(),
-					row.getValue());
+					row.getValue(),
+					row.getNumberOfDuplicates());
 		}
 
 		Collections.sort(
 				resultsToMerge,
-				new Comparator<NativeGeoWaveRow>() {
+				new Comparator<GeoWaveRow>() {
 					@Override
 					public int compare(
-							final NativeGeoWaveRow row1,
-							final NativeGeoWaveRow row2 ) {
+							final GeoWaveRow row1,
+							final GeoWaveRow row2 ) {
 
 						final ByteBuffer buf1 = ByteBuffer.wrap(row1.getIndex());
 						final ByteBuffer buf2 = ByteBuffer.wrap(row2.getIndex());
@@ -141,8 +142,8 @@ public class MergingEntryIterator<T> extends
 
 				});
 
-		final Iterator<NativeGeoWaveRow> iter = resultsToMerge.iterator();
-		NativeGeoWaveRow mergedResult = iter.next();
+		final Iterator<GeoWaveRow> iter = resultsToMerge.iterator();
+		GeoWaveRow mergedResult = iter.next();
 		while (iter.hasNext()) {
 			mergedResult = merge(
 					mergingAdapter,
@@ -154,10 +155,10 @@ public class MergingEntryIterator<T> extends
 		return mergedResult;
 	}
 
-	private NativeGeoWaveRow merge(
+	private GeoWaveRow merge(
 			final RowMergingDataAdapter mergingAdapter,
-			final NativeGeoWaveRow row,
-			final NativeGeoWaveRow rowToMerge ) {
+			final GeoWaveRow row,
+			final GeoWaveRow rowToMerge ) {
 
 		RowTransform transform = transforms.get(mergingAdapter.getAdapterId());
 		if (transform == null) {
@@ -190,12 +191,13 @@ public class MergingEntryIterator<T> extends
 						rowToMerge.getFieldMask()),
 				rowToMerge.getValue()));
 
-		return new NativeGeoWaveRowImpl(
+		return new GeoWaveRowImpl(
 				row.getDataId(),
 				row.getAdapterId(),
 				DataStoreUtils.removeUniqueId(row.getIndex()),
 				row.getFieldMask(),
-				transform.getBinaryFromMergedObject(mergeable));
+				transform.getBinaryFromMergedObject(mergeable),
+				row.getNumberOfDuplicates());
 
 	}
 

@@ -27,13 +27,18 @@ import mil.nga.giat.geowave.core.store.adapter.AdapterIndexMappingStore;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.IndexDependentDataAdapter;
+import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.exceptions.MismatchedIndexToAdapterMapping;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
+import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo.FieldInfo;
 import mil.nga.giat.geowave.core.store.callback.IngestCallback;
 import mil.nga.giat.geowave.core.store.callback.IngestCallbackList;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
+import mil.nga.giat.geowave.core.store.data.VisibilityWriter;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
+import mil.nga.giat.geowave.core.store.entities.NativeGeoWaveRowFactory;
 import mil.nga.giat.geowave.core.store.filter.DedupeFilter;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
@@ -47,6 +52,7 @@ import mil.nga.giat.geowave.core.store.query.PrefixIdQuery;
 import mil.nga.giat.geowave.core.store.query.Query;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
 import mil.nga.giat.geowave.core.store.query.RowIdQuery;
+import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
 
 public abstract class BaseDataStore implements
 		DataStore
@@ -76,7 +82,7 @@ public abstract class BaseDataStore implements
 		this.statisticsStore = statisticsStore;
 		this.indexMappingStore = indexMappingStore;
 		this.secondaryIndexDataStore = secondaryIndexDataStore;
-
+		
 		baseOperations = operations;
 		baseOptions = options;
 	}
@@ -618,4 +624,31 @@ public abstract class BaseDataStore implements
 			final DataAdapter adapter,
 			final PrimaryIndex index );
 
+	public <T> Iterable<GeoWaveRow> toGeoWaveRows(
+			final WritableDataAdapter<T> writableAdapter,
+			final PrimaryIndex index,
+			final DataStoreEntryInfo ingestInfo ) {
+		
+		final List<FieldInfo<?>> fieldInfoList = DataStoreUtils.composeFlattenedFields(
+				ingestInfo.getFieldInfo(),
+				index.getIndexModel(),
+				writableAdapter);
+
+		final boolean ensureUniqueId = (writableAdapter instanceof RowMergingDataAdapter)
+				&& (((RowMergingDataAdapter) writableAdapter).getTransform() != null);
+		
+		final Iterable<GeoWaveRow> nativeRows = getRowsFromIngest(
+				writableAdapter.getAdapterId().getBytes(),
+				ingestInfo,
+				fieldInfoList,
+				ensureUniqueId);
+		
+		return nativeRows;
+	}
+	
+	protected abstract Iterable<GeoWaveRow> getRowsFromIngest(
+			final byte[] adapterId,
+			final DataStoreEntryInfo ingestInfo,
+			final List<FieldInfo<?>> fieldInfoList,
+			final boolean ensureUniqueId);
 }

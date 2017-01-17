@@ -16,32 +16,35 @@ import org.apache.hadoop.hbase.client.RowMutations;
 import org.apache.log4j.Logger;
 
 import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.core.index.StringUtils;
 import mil.nga.giat.geowave.core.store.DataStoreOptions;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
+import mil.nga.giat.geowave.core.store.base.Writer;
 import mil.nga.giat.geowave.core.store.callback.IngestCallback;
 import mil.nga.giat.geowave.core.store.data.VisibilityWriter;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
+import mil.nga.giat.geowave.core.store.entities.NativeGeoWaveRowFactory;
 import mil.nga.giat.geowave.core.store.index.DataStoreIndexWriter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.index.SecondaryIndex;
 import mil.nga.giat.geowave.core.store.index.SecondaryIndexDataAdapter;
 import mil.nga.giat.geowave.core.store.index.SecondaryIndexUtils;
+import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
 import mil.nga.giat.geowave.datastore.hbase.io.HBaseWriter;
 import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
-import mil.nga.giat.geowave.datastore.hbase.util.HBaseUtils;
 
 public class HBaseIndexWriter<T> extends
-		DataStoreIndexWriter<T, RowMutations>
+		DataStoreIndexWriter<T, HBaseRow>
 {
-
 	private final static Logger LOGGER = Logger.getLogger(HBaseIndexWriter.class);
 	private final BasicHBaseOperations operations;
 	protected final DataStoreOptions options;
+	protected final HBaseDataStore dataStore;
 
 	public HBaseIndexWriter(
+			final HBaseDataStore dataStore,
 			final DataAdapter<T> adapter,
 			final PrimaryIndex index,
 			final BasicHBaseOperations operations,
@@ -55,6 +58,7 @@ public class HBaseIndexWriter<T> extends
 				options,
 				callback,
 				closable);
+		this.dataStore = dataStore;
 		this.operations = operations;
 		this.options = options;
 		initializeSecondaryIndexTables();
@@ -64,11 +68,12 @@ public class HBaseIndexWriter<T> extends
 	protected DataStoreEntryInfo getEntryInfo(
 			T entry,
 			VisibilityWriter<T> visibilityWriter ) {
-		return HBaseUtils.write(
+		return DataStoreUtils.write(
+				dataStore,
 				(WritableDataAdapter<T>) adapter,
 				index,
 				entry,
-				(HBaseWriter) writer,
+				writer,
 				visibilityWriter);
 	}
 

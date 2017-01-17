@@ -53,7 +53,7 @@ import mil.nga.giat.geowave.core.store.callback.ScanCallback;
 import mil.nga.giat.geowave.core.store.data.PersistentDataset;
 import mil.nga.giat.geowave.core.store.data.VisibilityWriter;
 import mil.nga.giat.geowave.core.store.entities.GeowaveRowId;
-import mil.nga.giat.geowave.core.store.entities.NativeGeoWaveRow;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.filter.DedupeFilter;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.CommonIndexModel;
@@ -143,7 +143,7 @@ public class AccumuloUtils
 			final AdapterStore adapterStore,
 			final QueryFilter clientFilter,
 			final PrimaryIndex index,
-			final ScanCallback<T, NativeGeoWaveRow> scanCallback ) {
+			final ScanCallback<T, GeoWaveRow> scanCallback ) {
 		final GeowaveRowId rowId = new GeowaveRowId(
 				key.getRow().copyBytes());
 		return (T) decodeRowObj(
@@ -187,7 +187,7 @@ public class AccumuloUtils
 			final AdapterStore adapterStore,
 			final QueryFilter clientFilter,
 			final PrimaryIndex index,
-			final ScanCallback<T, NativeGeoWaveRow> scanCallback ) {
+			final ScanCallback<T, GeoWaveRow> scanCallback ) {
 		final Pair<T, DataStoreEntryInfo> pair = decodeRow(
 				key,
 				value,
@@ -212,7 +212,7 @@ public class AccumuloUtils
 			final AdapterStore adapterStore,
 			final QueryFilter clientFilter,
 			final PrimaryIndex index,
-			final ScanCallback<T, NativeGeoWaveRow> scanCallback ) {
+			final ScanCallback<T, GeoWaveRow> scanCallback ) {
 		if ((dataAdapter == null) && (adapterStore == null)) {
 			LOGGER.error("Could not decode row from iterator. Either adapter or adapter store must be non-null.");
 			return null;

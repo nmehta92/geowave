@@ -5,10 +5,10 @@ import java.util.Map;
 
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 
-import mil.nga.giat.geowave.core.store.entities.NativeGeoWaveRow;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 
 public class DynamoDBRow implements
-		NativeGeoWaveRow
+		GeoWaveRow
 {
 	public static final String GW_PARTITION_ID_KEY = "P";
 	public static final String GW_RANGE_KEY = "R";
@@ -52,6 +52,11 @@ public class DynamoDBRow implements
 	public byte[] getIndex() {
 		initIds();
 		return idx;
+	}
+
+	@Override
+	public int getNumberOfDuplicates() {
+		return 0;
 	}
 
 	public synchronized void initIds() {

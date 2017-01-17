@@ -40,9 +40,11 @@ import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DuplicateEntryCount;
 import mil.nga.giat.geowave.core.store.base.BaseDataStore;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
+import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo.FieldInfo;
 import mil.nga.giat.geowave.core.store.base.Deleter;
 import mil.nga.giat.geowave.core.store.callback.IngestCallback;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.filter.DedupeFilter;
 import mil.nga.giat.geowave.core.store.index.IndexMetaDataSet;
 import mil.nga.giat.geowave.core.store.index.IndexStore;
@@ -76,7 +78,8 @@ public class HBaseDataStore extends
 {
 	public final static String TYPE = "hbase";
 
-	private final static Logger LOGGER = Logger.getLogger(HBaseDataStore.class);
+	private final static Logger LOGGER = Logger.getLogger(
+			HBaseDataStore.class);
 
 	private final BasicHBaseOperations operations;
 	private final HBaseOptions options;
@@ -153,7 +156,8 @@ public class HBaseDataStore extends
 
 		this.operations = operations;
 		this.options = options;
-		secondaryIndexDataStore.setDataStore(this);
+		secondaryIndexDataStore.setDataStore(
+				this);
 	}
 
 	@Override
@@ -170,6 +174,7 @@ public class HBaseDataStore extends
 			final IngestCallback callback,
 			final Closeable closable ) {
 		return new HBaseIndexWriter(
+				this,
 				adapter,
 				index,
 				operations,
@@ -185,10 +190,11 @@ public class HBaseDataStore extends
 			final DataAdapter<T> adapter,
 			final ByteArrayId primaryIndexId ) {
 		try {
-			callbacks.add(new AltIndexCallback<T>(
-					indexName,
-					(WritableDataAdapter<T>) adapter,
-					options));
+			callbacks.add(
+					new AltIndexCallback<T>(
+							indexName,
+							(WritableDataAdapter<T>) adapter,
+							options));
 
 		}
 		catch (final Exception e) {
@@ -208,7 +214,8 @@ public class HBaseDataStore extends
 			final DedupeFilter dedupeFilter,
 			final String... authorizations ) {
 
-		final String tableName = StringUtils.stringFromBinary(index.getId().getBytes());
+		final String tableName = StringUtils.stringFromBinary(
+				index.getId().getBytes());
 
 		final List<Iterator<Result>> resultList = new ArrayList<Iterator<Result>>();
 		final List<ResultScanner> resultScanners = new ArrayList<ResultScanner>();
@@ -216,21 +223,25 @@ public class HBaseDataStore extends
 
 		try {
 			final Scan scanner = new Scan();
-			scanner.setMaxVersions(1);
+			scanner.setMaxVersions(
+					1);
 
-			scanner.addFamily(adapter.getAdapterId().getBytes());
+			scanner.addFamily(
+					adapter.getAdapterId().getBytes());
 
 			if (options.isEnableCustomFilters()) {
 				final FilterList filterList = new FilterList();
 
 				for (final ByteArrayId dataId : dataIds) {
-					filterList.addFilter(new SingleEntryFilter(
-							dataId.getBytes(),
-							adapter.getAdapterId().getBytes()));
+					filterList.addFilter(
+							new SingleEntryFilter(
+									dataId.getBytes(),
+									adapter.getAdapterId().getBytes()));
 				}
 
 				if (!filterList.getFilters().isEmpty()) {
-					scanner.setFilter(filterList);
+					scanner.setFilter(
+							filterList);
 				}
 			}
 
@@ -250,7 +261,8 @@ public class HBaseDataStore extends
 					if (rowHasData(
 							rowId,
 							dataIds)) {
-						filteredResults.add(result);
+						filteredResults.add(
+								result);
 					}
 				}
 
@@ -260,13 +272,16 @@ public class HBaseDataStore extends
 				resultIt = results.iterator();
 			}
 
-			resultScanners.add(results);
+			resultScanners.add(
+					results);
 
 			if (resultIt.hasNext()) {
-				resultList.add(resultIt);
+				resultList.add(
+						resultIt);
 			}
 
-			iterator = Iterators.concat(resultList.iterator());
+			iterator = Iterators.concat(
+					resultList.iterator());
 		}
 		catch (final IOException e) {
 			LOGGER.warn(
@@ -299,7 +314,8 @@ public class HBaseDataStore extends
 				rowId.length - 12,
 				rowId.length);
 
-		final ByteBuffer metadataBuf = ByteBuffer.wrap(metadata);
+		final ByteBuffer metadataBuf = ByteBuffer.wrap(
+				metadata);
 		final int adapterIdLength = metadataBuf.getInt();
 		final int dataIdLength = metadataBuf.getInt();
 
@@ -310,9 +326,12 @@ public class HBaseDataStore extends
 		final byte[] indexId = new byte[rowId.length - 12 - adapterIdLength - dataIdLength];
 		final byte[] rawAdapterId = new byte[adapterIdLength];
 		final byte[] rawDataId = new byte[dataIdLength];
-		buf.get(indexId);
-		buf.get(rawAdapterId);
-		buf.get(rawDataId);
+		buf.get(
+				indexId);
+		buf.get(
+				rawAdapterId);
+		buf.get(
+				rawDataId);
 
 		for (final ByteArrayId dataId : dataIds) {
 			if (Arrays.equals(
@@ -334,12 +353,16 @@ public class HBaseDataStore extends
 
 		final List<ByteArrayId> result = new ArrayList<ByteArrayId>();
 		try {
-			if (options.isUseAltIndex() && operations.tableExists(tableName)) {
+			if (options.isUseAltIndex() && operations.tableExists(
+					tableName)) {
 				for (final ByteArrayId dataId : dataIds) {
 					final Scan scanner = new Scan();
-					scanner.setStartRow(dataId.getBytes());
-					scanner.setStopRow(dataId.getBytes());
-					scanner.addFamily(adapterId.getBytes());
+					scanner.setStartRow(
+							dataId.getBytes());
+					scanner.setStopRow(
+							dataId.getBytes());
+					scanner.addFamily(
+							adapterId.getBytes());
 
 					final ResultScanner results = operations.getScannedResults(
 							scanner,
@@ -347,9 +370,11 @@ public class HBaseDataStore extends
 							authorizations);
 					final Iterator<Result> iterator = results.iterator();
 					while (iterator.hasNext()) {
-						result.add(new ByteArrayId(
-								CellUtil.cloneQualifier(iterator.next().listCells().get(
-										0))));
+						result.add(
+								new ByteArrayId(
+										CellUtil.cloneQualifier(
+												iterator.next().listCells().get(
+														0))));
 					}
 				}
 			}
@@ -392,7 +417,8 @@ public class HBaseDataStore extends
 				sanitizedQueryOptions.getFieldIdsAdapterPair(),
 				sanitizedQueryOptions.getAuthorizations());
 
-		hbaseQuery.setOptions(options);
+		hbaseQuery.setOptions(
+				options);
 
 		return hbaseQuery.query(
 				operations,
@@ -415,7 +441,8 @@ public class HBaseDataStore extends
 				sanitizedQueryOptions.getLimit(),
 				sanitizedQueryOptions.getAuthorizations());
 
-		prefixQuery.setOptions(options);
+		prefixQuery.setOptions(
+				options);
 
 		return prefixQuery.query(
 				operations,
@@ -439,7 +466,8 @@ public class HBaseDataStore extends
 				filter,
 				sanitizedQueryOptions.getAuthorizations());
 
-		q.setOptions(options);
+		q.setOptions(
+				options);
 
 		return q.query(
 				operations,
@@ -481,9 +509,12 @@ public class HBaseDataStore extends
 				for (final Result r : results) {
 					final Delete delete = new Delete(
 							r.getRow());
-					delete.addFamily(StringUtils.stringToBinary(columnFamily));
+					delete.addFamily(
+							StringUtils.stringToBinary(
+									columnFamily));
 
-					deleter.delete(delete);
+					deleter.delete(
+							delete);
 				}
 			}
 			return true;
@@ -561,18 +592,23 @@ public class HBaseDataStore extends
 				throws IOException {
 			this.adapter = adapter;
 			altIdxTableName = indexName + ALT_INDEX_TABLE;
-			if (operations.tableExists(indexName)) {
-				if (!operations.tableExists(altIdxTableName)) {
+			if (operations.tableExists(
+					indexName)) {
+				if (!operations.tableExists(
+						altIdxTableName)) {
 					throw new TableNotFoundException(
 							altIdxTableName);
 				}
 			}
 			else {
 				// index table does not exist yet
-				if (operations.tableExists(altIdxTableName)) {
-					operations.deleteTable(altIdxTableName);
-					LOGGER.warn("Deleting current alternate index table [" + altIdxTableName
-							+ "] as main table does not yet exist.");
+				if (operations.tableExists(
+						altIdxTableName)) {
+					operations.deleteTable(
+							altIdxTableName);
+					LOGGER.warn(
+							"Deleting current alternate index table [" + altIdxTableName
+									+ "] as main table does not yet exist.");
 				}
 			}
 
@@ -610,4 +646,13 @@ public class HBaseDataStore extends
 
 	}
 
+	@Override
+	protected Iterable<GeoWaveRow> getRowsFromIngest(
+			byte[] adapterId,
+			DataStoreEntryInfo ingestInfo,
+			List<FieldInfo<?>> fieldInfoList,
+			boolean ensureUniqueId ) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

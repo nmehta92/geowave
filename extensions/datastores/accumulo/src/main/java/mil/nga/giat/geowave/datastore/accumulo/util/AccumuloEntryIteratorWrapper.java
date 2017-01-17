@@ -9,7 +9,7 @@ import org.apache.log4j.Logger;
 
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
-import mil.nga.giat.geowave.core.store.entities.NativeGeoWaveRow;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.util.EntryIteratorWrapper;
@@ -49,7 +49,7 @@ public class AccumuloEntryIteratorWrapper<T> extends
 			final PrimaryIndex index,
 			final Iterator scannerIt,
 			final QueryFilter clientFilter,
-			final ScanCallback<T, NativeGeoWaveRow> scanCallback ) {
+			final ScanCallback<T, GeoWaveRow> scanCallback ) {
 		super(
 				wholeRowEncoding,
 				adapterStore,
@@ -82,7 +82,7 @@ public class AccumuloEntryIteratorWrapper<T> extends
 				adapterStore,
 				clientFilter,
 				index,
-				(ScanCallback<T, NativeGeoWaveRow>) scanCallback);
+				(ScanCallback<T, GeoWaveRow>) scanCallback);
 	}
 
 }
