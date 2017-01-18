@@ -4,24 +4,23 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
+import mil.nga.giat.geowave.core.index.StringUtils;
+import mil.nga.giat.geowave.core.store.base.Writer;
+import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
+
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.BufferedMutator;
-import org.apache.hadoop.hbase.client.BufferedMutator.ExceptionListener;
 import org.apache.hadoop.hbase.client.BufferedMutatorParams;
 import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.RetriesExhaustedWithDetailsException;
 import org.apache.hadoop.hbase.client.RowMutations;
+import org.apache.hadoop.hbase.client.BufferedMutator.ExceptionListener;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-
-import mil.nga.giat.geowave.core.index.StringUtils;
-import mil.nga.giat.geowave.core.store.base.Writer;
-import mil.nga.giat.geowave.datastore.hbase.HBaseRow;
-import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
 
 /**
  * Functionality similar to <code> BatchWriterWrapper </code>
@@ -31,7 +30,7 @@ import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
  *
  */
 public class HBaseWriter implements
-		Writer<HBaseRow>
+		Writer<RowMutations>
 {
 	private final static Logger LOGGER = Logger.getLogger(HBaseWriter.class);
 	private final TableName tableName;
@@ -96,20 +95,6 @@ public class HBaseWriter implements
 
 	@Override
 	public void write(
-			final HBaseRow hbaseRow ) {
-		try {
-			RowMutations rowMutation = null; // dataStore.toMutation(hbaseRow);
-			getBufferedMutator().mutate(
-					rowMutation.getMutations());
-		}
-		catch (final IOException e) {
-			LOGGER.error(
-					"Unable to write mutation.",
-					e);
-		}
-	}
-	
-	protected void write(
 			final RowMutations rowMutation ) {
 		try {
 			getBufferedMutator().mutate(
@@ -122,12 +107,11 @@ public class HBaseWriter implements
 		}
 	}
 
-
 	@Override
 	public void write(
-			final Iterable<HBaseRow> hbaseRows ) {
-		for (final HBaseRow hbaseRow : hbaseRows) {
-			write(hbaseRow);
+			final Iterable<RowMutations> mutations ) {
+		for (final RowMutations rowMutation : mutations) {
+			write(rowMutation);
 		}
 	}
 

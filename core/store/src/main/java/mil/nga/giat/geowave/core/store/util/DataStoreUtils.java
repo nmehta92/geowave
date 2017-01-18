@@ -956,7 +956,7 @@ public class DataStoreUtils
 			final WritableDataAdapter<T> writableAdapter,
 			final PrimaryIndex index,
 			final T entry,
-			final Writer<GeoWaveRow> writer,
+			final Writer writer,
 			final VisibilityWriter<T> customFieldVisibilityWriter ) {
 
 		final DataStoreEntryInfo ingestInfo = DataStoreUtils.getIngestInfo(
@@ -965,14 +965,13 @@ public class DataStoreUtils
 				entry,
 				customFieldVisibilityWriter);
 
-		final Iterable<GeoWaveRow> nativeRows = dataStore.toGeoWaveRows(
+		final Iterable<GeoWaveRow> rows = dataStore.toGeoWaveRows(
 				writableAdapter,
 				index,
 				ingestInfo);
 
 		try {
-			writer.write(
-					nativeRows);
+			dataStore.write(writer, rows);
 		}
 		catch (final Exception e) {
 			LOGGER.warn(

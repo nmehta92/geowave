@@ -21,22 +21,18 @@ import mil.nga.giat.geowave.core.store.DataStoreOptions;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.WritableDataAdapter;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
-import mil.nga.giat.geowave.core.store.base.Writer;
 import mil.nga.giat.geowave.core.store.callback.IngestCallback;
 import mil.nga.giat.geowave.core.store.data.VisibilityWriter;
-import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
-import mil.nga.giat.geowave.core.store.entities.NativeGeoWaveRowFactory;
 import mil.nga.giat.geowave.core.store.index.DataStoreIndexWriter;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.index.SecondaryIndex;
 import mil.nga.giat.geowave.core.store.index.SecondaryIndexDataAdapter;
 import mil.nga.giat.geowave.core.store.index.SecondaryIndexUtils;
 import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
-import mil.nga.giat.geowave.datastore.hbase.io.HBaseWriter;
 import mil.nga.giat.geowave.datastore.hbase.operations.BasicHBaseOperations;
 
 public class HBaseIndexWriter<T> extends
-		DataStoreIndexWriter<T, HBaseRow>
+		DataStoreIndexWriter<T, RowMutations>
 {
 	private final static Logger LOGGER = Logger.getLogger(HBaseIndexWriter.class);
 	private final BasicHBaseOperations operations;

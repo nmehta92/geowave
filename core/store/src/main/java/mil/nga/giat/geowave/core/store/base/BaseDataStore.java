@@ -646,9 +646,27 @@ public abstract class BaseDataStore implements
 		return nativeRows;
 	}
 	
+	/** DataStore-specific method to create its row impl on ingest
+	 *  Called from toGeoWaveRows method above.
+	 * 
+	 * @param adapterId
+	 * @param ingestInfo
+	 * @param fieldInfoList
+	 * @param ensureUniqueId
+	 * @return
+	 */
 	protected abstract Iterable<GeoWaveRow> getRowsFromIngest(
 			final byte[] adapterId,
 			final DataStoreEntryInfo ingestInfo,
 			final List<FieldInfo<?>> fieldInfoList,
 			final boolean ensureUniqueId);
+
+	/** DataStore-specific method that accepts a writer and a list of rows,
+	 *  converts them to db mutations and passes them to the writer.
+	 * @param writer
+	 * @param rows
+	 */
+	public abstract void write(
+			Writer writer,
+			Iterable<GeoWaveRow> rows );
 }

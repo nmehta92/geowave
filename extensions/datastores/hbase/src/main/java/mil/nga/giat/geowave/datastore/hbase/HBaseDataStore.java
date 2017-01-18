@@ -15,8 +15,10 @@ import java.util.List;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.TableNotFoundException;
 import org.apache.hadoop.hbase.client.Delete;
+import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.RowMutations;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -42,6 +44,7 @@ import mil.nga.giat.geowave.core.store.base.BaseDataStore;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo.FieldInfo;
 import mil.nga.giat.geowave.core.store.base.Deleter;
+import mil.nga.giat.geowave.core.store.base.Writer;
 import mil.nga.giat.geowave.core.store.callback.IngestCallback;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
@@ -52,6 +55,7 @@ import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 import mil.nga.giat.geowave.core.store.query.Query;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
+import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
 import mil.nga.giat.geowave.datastore.hbase.index.secondary.HBaseSecondaryIndexDataStore;
 import mil.nga.giat.geowave.datastore.hbase.io.HBaseWriter;
 import mil.nga.giat.geowave.datastore.hbase.mapreduce.GeoWaveHBaseRecordReader;
@@ -652,7 +656,54 @@ public class HBaseDataStore extends
 			DataStoreEntryInfo ingestInfo,
 			List<FieldInfo<?>> fieldInfoList,
 			boolean ensureUniqueId ) {
-		// TODO Auto-generated method stub
-		return null;
+		ArrayList<GeoWaveRow> rows = new ArrayList<>();
+		
+		for (ByteArrayId rowId : ingestInfo.getRowIds()) {
+			if (ensureUniqueId) {
+				rowId = DataStoreUtils.ensureUniqueId(
+						rowId.getBytes(),
+						true);
+			}
+
+			HBaseRow hbaseRow = new HBaseRow(rowId.getBytes(), fieldInfoList);	
+			rows.add(hbaseRow);
+		}
+		
+		return rows;
+	}
+
+	@Override
+	public void write(
+			Writer writer,
+			Iterable<GeoWaveRow> rows ) {
+		final List<RowMutations> mutations = new ArrayList<RowMutations>();
+
+		for (GeoWaveRow geoWaveRow : rows) {
+			HBaseRow hbaseRow = (HBaseRow)geoWaveRow;
+			
+			byte[] rowId = hbaseRow.getRowId();
+			RowMutations mutation = new RowMutations(rowId);
+			
+			byte[] adapterId = hbaseRow.getAdapterId();
+			
+			try {
+				final Put row = new Put(rowId);
+				for (final FieldInfo fieldInfo : hbaseRow.getFieldInfoList()) {
+					row.addColumn(
+							adapterId,
+							fieldInfo.getDataValue().getId().getBytes(),
+							fieldInfo.getWrittenValue());
+				}
+				mutation.add(row);
+			}
+			catch (final IOException e) {
+				LOGGER.warn(
+						"Could not add row to mutation.",
+						e);
+			}
+			mutations.add(mutation);
+		}
+		
+		((HBaseWriter)writer).write(mutations);
 	}
 }
