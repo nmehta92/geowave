@@ -18,6 +18,7 @@ import mil.nga.giat.geowave.core.store.base.BaseDataStore;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo.FieldInfo;
 import mil.nga.giat.geowave.core.store.base.Deleter;
+import mil.nga.giat.geowave.core.store.base.Writer;
 import mil.nga.giat.geowave.core.store.callback.IngestCallback;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
 import mil.nga.giat.geowave.core.store.data.visibility.DifferingFieldVisibilityEntryCount;
@@ -231,5 +232,13 @@ public class DynamoDBDataStore extends
 			boolean ensureUniqueId ) {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public void write(
+			Writer writer,
+			Iterable<GeoWaveRow> rows ) {
+		// TODO Auto-generated method stub
+		
 	}
 }
