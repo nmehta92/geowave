@@ -82,7 +82,7 @@ public abstract class BaseDataStore implements
 		this.statisticsStore = statisticsStore;
 		this.indexMappingStore = indexMappingStore;
 		this.secondaryIndexDataStore = secondaryIndexDataStore;
-		
+
 		baseOperations = operations;
 		baseOptions = options;
 	}
@@ -628,7 +628,7 @@ public abstract class BaseDataStore implements
 			final WritableDataAdapter<T> writableAdapter,
 			final PrimaryIndex index,
 			final DataStoreEntryInfo ingestInfo ) {
-		
+
 		final List<FieldInfo<?>> fieldInfoList = DataStoreUtils.composeFlattenedFields(
 				ingestInfo.getFieldInfo(),
 				index.getIndexModel(),
@@ -636,18 +636,19 @@ public abstract class BaseDataStore implements
 
 		final boolean ensureUniqueId = (writableAdapter instanceof RowMergingDataAdapter)
 				&& (((RowMergingDataAdapter) writableAdapter).getTransform() != null);
-		
+
 		final Iterable<GeoWaveRow> nativeRows = getRowsFromIngest(
 				writableAdapter.getAdapterId().getBytes(),
 				ingestInfo,
 				fieldInfoList,
 				ensureUniqueId);
-		
+
 		return nativeRows;
 	}
-	
-	/** DataStore-specific method to create its row impl on ingest
-	 *  Called from toGeoWaveRows method above.
+
+	/**
+	 * DataStore-specific method to create its row impl on ingest Called from
+	 * toGeoWaveRows method above.
 	 * 
 	 * @param adapterId
 	 * @param ingestInfo
@@ -659,10 +660,12 @@ public abstract class BaseDataStore implements
 			final byte[] adapterId,
 			final DataStoreEntryInfo ingestInfo,
 			final List<FieldInfo<?>> fieldInfoList,
-			final boolean ensureUniqueId);
+			final boolean ensureUniqueId );
 
-	/** DataStore-specific method that accepts a writer and a list of rows,
-	 *  converts them to db mutations and passes them to the writer.
+	/**
+	 * DataStore-specific method that accepts a writer and a list of rows,
+	 * converts them to db mutations and passes them to the writer.
+	 * 
 	 * @param writer
 	 * @param rows
 	 */

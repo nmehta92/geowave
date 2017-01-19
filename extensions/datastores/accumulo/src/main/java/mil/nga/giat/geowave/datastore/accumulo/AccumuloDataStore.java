@@ -657,6 +657,6 @@ public class AccumuloDataStore extends
 			Writer writer,
 			Iterable<GeoWaveRow> rows ) {
 		// TODO Auto-generated method stub
-		
+
 	}
 }

@@ -140,7 +140,7 @@ public class HBaseUtils
 
 		return ingestInfo;
 	}
-	
+
 	public static String getQualifiedTableName(
 			final String tableNamespace,
 			final String unqualifiedTableName ) {

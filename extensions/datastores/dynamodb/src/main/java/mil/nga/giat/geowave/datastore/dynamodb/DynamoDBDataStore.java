@@ -239,6 +239,6 @@ public class DynamoDBDataStore extends
 			Writer writer,
 			Iterable<GeoWaveRow> rows ) {
 		// TODO Auto-generated method stub
-		
+
 	}
 }

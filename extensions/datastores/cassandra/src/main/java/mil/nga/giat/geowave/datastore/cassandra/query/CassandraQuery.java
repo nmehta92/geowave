@@ -35,8 +35,7 @@ import mil.nga.giat.geowave.datastore.cassandra.operations.RowRead;
  */
 abstract public class CassandraQuery
 {
-	private final static Logger LOGGER = Logger.getLogger(
-			CassandraQuery.class);
+	private final static Logger LOGGER = Logger.getLogger(CassandraQuery.class);
 	protected final List<ByteArrayId> adapterIds;
 	protected final PrimaryIndex index;
 	protected final Pair<List<String>, DataAdapter<?>> fieldIdsAdapterPair;

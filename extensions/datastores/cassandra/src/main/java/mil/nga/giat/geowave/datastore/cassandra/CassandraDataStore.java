@@ -266,7 +266,7 @@ public class CassandraDataStore extends
 			Writer writer,
 			Iterable<GeoWaveRow> rows ) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 }

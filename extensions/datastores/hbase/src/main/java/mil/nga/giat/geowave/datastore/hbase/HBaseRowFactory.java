@@ -7,7 +7,8 @@ import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.entities.NativeGeoWaveRowFactory;
 
-public class HBaseRowFactory implements NativeGeoWaveRowFactory<RowMutations, Result>
+public class HBaseRowFactory implements
+		NativeGeoWaveRowFactory<RowMutations, Result>
 {
 
 	public HBaseRowFactory() {
@@ -29,7 +30,8 @@ public class HBaseRowFactory implements NativeGeoWaveRowFactory<RowMutations, Re
 	}
 
 	@Override
-	public RowMutations toMutation(GeoWaveRow nativeRow) {
+	public RowMutations toMutation(
+			GeoWaveRow nativeRow ) {
 		// TODO Auto-generated method stub
 		return null;
 	}

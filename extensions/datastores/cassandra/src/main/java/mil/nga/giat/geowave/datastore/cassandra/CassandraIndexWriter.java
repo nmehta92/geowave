@@ -67,22 +67,16 @@ public class CassandraIndexWriter<T> extends
 		}
 		else {
 			for (final FieldInfo<?> fieldInfo : ingestInfo.getFieldInfo()) {
-				final ByteBuffer fieldInfoBytes = ByteBuffer.allocate(
-						4 + fieldInfo.getWrittenValue().length);
-				fieldInfoBytes.putInt(
-						fieldInfo.getWrittenValue().length);
-				fieldInfoBytes.put(
-						fieldInfo.getWrittenValue());
-				fieldInfoBytesList.add(
-						fieldInfoBytes.array());
+				final ByteBuffer fieldInfoBytes = ByteBuffer.allocate(4 + fieldInfo.getWrittenValue().length);
+				fieldInfoBytes.putInt(fieldInfo.getWrittenValue().length);
+				fieldInfoBytes.put(fieldInfo.getWrittenValue());
+				fieldInfoBytesList.add(fieldInfoBytes.array());
 				totalLength += fieldInfoBytes.array().length;
 			}
 		}
-		final ByteBuffer allFields = ByteBuffer.allocate(
-				totalLength);
+		final ByteBuffer allFields = ByteBuffer.allocate(totalLength);
 		for (final byte[] bytes : fieldInfoBytesList) {
-			allFields.put(
-					bytes);
+			allFields.put(bytes);
 		}
 		for (final ByteArrayId insertionId : ingestInfo.getInsertionIds()) {
 			allFields.rewind();
@@ -95,17 +89,16 @@ public class CassandraIndexWriter<T> extends
 			else {
 				uniqueInsertionId = insertionId;
 			}
-			rows.add(
-					new CassandraRow(
-							new byte[] {
-								(byte) (counter++ % PARTITIONS)
-							},
-							ingestInfo.getDataId(),
-							adapterId,
-							uniqueInsertionId.getBytes(),
-							// TODO: add field mask
-							new byte[] {},
-							allFields.array()));
+			rows.add(new CassandraRow(
+					new byte[] {
+						(byte) (counter++ % PARTITIONS)
+					},
+					ingestInfo.getDataId(),
+					adapterId,
+					uniqueInsertionId.getBytes(),
+					// TODO: add field mask
+					new byte[] {},
+					allFields.array()));
 		}
 		return rows;
 	}
@@ -120,12 +113,11 @@ public class CassandraIndexWriter<T> extends
 				entry,
 				DataStoreUtils.UNCONSTRAINED_VISIBILITY);
 		if (entryInfo != null) {
-			writer.write(
-					getRows(
-							adapterId,
-							entryInfo,
-							(adapter instanceof RowMergingDataAdapter)
-									&& (((RowMergingDataAdapter) adapter).getTransform() != null)));
+			writer.write(getRows(
+					adapterId,
+					entryInfo,
+					(adapter instanceof RowMergingDataAdapter)
+							&& (((RowMergingDataAdapter) adapter).getTransform() != null)));
 		}
 		return entryInfo;
 	}

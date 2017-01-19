@@ -11,6 +11,6 @@ public interface GeoWaveRow
 	public byte[] getValue();
 
 	public byte[] getIndex();
-	
+
 	public int getNumberOfDuplicates();
 }

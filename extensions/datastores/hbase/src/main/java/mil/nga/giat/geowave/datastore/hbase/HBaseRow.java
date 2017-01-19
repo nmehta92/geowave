@@ -9,14 +9,15 @@ public class HBaseRow extends
 		GeoWaveRowImpl
 {
 	private List<FieldInfo<?>> fieldInfoList;
-	
+
 	public HBaseRow(
 			byte[] rowId,
 			List<FieldInfo<?>> fieldInfoList ) {
-		super(rowId);
+		super(
+				rowId);
 		this.fieldInfoList = fieldInfoList;
 	}
-	
+
 	public List<FieldInfo<?>> getFieldInfoList() {
 		return fieldInfoList;
 	}

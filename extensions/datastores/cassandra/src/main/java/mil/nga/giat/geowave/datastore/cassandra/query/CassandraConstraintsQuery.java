@@ -39,8 +39,7 @@ import mil.nga.giat.geowave.datastore.cassandra.operations.CassandraOperations;
 public class CassandraConstraintsQuery extends
 		CassandraFilteredIndexQuery
 {
-	private static final Logger LOGGER = Logger.getLogger(
-			CassandraConstraintsQuery.class);
+	private static final Logger LOGGER = Logger.getLogger(CassandraConstraintsQuery.class);
 	// TODO: determine good values for max range decomposition in cassandra
 	private static final int MAX_RANGE_DECOMPOSITION = 10;
 	protected final ConstraintsQuery base;
@@ -63,10 +62,8 @@ public class CassandraConstraintsQuery extends
 				operations,
 				adapterIds,
 				index,
-				query != null ? query.getIndexConstraints(
-						index.getIndexStrategy()) : null,
-				query != null ? query.createFilters(
-						index.getIndexModel()) : null,
+				query != null ? query.getIndexConstraints(index.getIndexStrategy()) : null,
+				query != null ? query.createFilters(index.getIndexModel()) : null,
 				clientDedupeFilter,
 				scanCallback,
 				aggregation,
@@ -162,12 +159,10 @@ public class CassandraConstraintsQuery extends
 						if (input != null) {
 							// TODO this is a hack for now
 							if (aggregationFunction instanceof CommonIndexAggregation) {
-								aggregationFunction.aggregate(
-										null);
+								aggregationFunction.aggregate(null);
 							}
 							else {
-								aggregationFunction.aggregate(
-										input);
+								aggregationFunction.aggregate(input);
 							}
 						}
 					}
@@ -180,8 +175,7 @@ public class CassandraConstraintsQuery extends
 								e);
 					}
 					return new Wrapper(
-							Iterators.singletonIterator(
-									aggregationFunction.getResult()));
+							Iterators.singletonIterator(aggregationFunction.getResult()));
 				}
 			}
 		}
@@ -200,18 +194,15 @@ public class CassandraConstraintsQuery extends
 						0,
 						new CoordinateRangeQueryFilter(
 								index.getIndexStrategy(),
-								coords.toArray(
-										new MultiDimensionalCoordinateRangesArray[] {})));
+								coords.toArray(new MultiDimensionalCoordinateRangesArray[] {})));
 			}
 		}
 		else {
 			// Without custom filters, we need all the filters on the client
 			// side
 			for (final QueryFilter distributable : base.distributableFilters) {
-				if (!filters.contains(
-						distributable)) {
-					filters.add(
-							distributable);
+				if (!filters.contains(distributable)) {
+					filters.add(distributable);
 				}
 			}
 		}
