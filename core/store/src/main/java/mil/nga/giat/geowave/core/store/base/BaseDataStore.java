@@ -637,13 +637,13 @@ public abstract class BaseDataStore implements
 		final boolean ensureUniqueId = (writableAdapter instanceof RowMergingDataAdapter)
 				&& (((RowMergingDataAdapter) writableAdapter).getTransform() != null);
 
-		final Iterable<GeoWaveRow> nativeRows = getRowsFromIngest(
+		final Iterable<GeoWaveRow> geowaveRows = getRowsFromIngest(
 				writableAdapter.getAdapterId().getBytes(),
 				ingestInfo,
 				fieldInfoList,
 				ensureUniqueId);
 
-		return nativeRows;
+		return geowaveRows;
 	}
 
 	/**
@@ -671,5 +671,6 @@ public abstract class BaseDataStore implements
 	 */
 	public abstract void write(
 			Writer writer,
-			Iterable<GeoWaveRow> rows );
+			Iterable<GeoWaveRow> rows,
+			final String columnFamily );
 }

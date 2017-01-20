@@ -1,6 +1,8 @@
 package mil.nga.giat.geowave.datastore.cassandra;
 
 import java.io.Closeable;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.base.Function;
@@ -14,6 +16,7 @@ import mil.nga.giat.geowave.core.store.DataStoreOptions;
 import mil.nga.giat.geowave.core.store.IndexWriter;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
+import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DuplicateEntryCount;
 import mil.nga.giat.geowave.core.store.base.BaseDataStore;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
@@ -29,6 +32,7 @@ import mil.nga.giat.geowave.core.store.index.IndexMetaDataSet;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.query.Query;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
+import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
 import mil.nga.giat.geowave.core.store.util.NativeEntryIteratorWrapper;
 import mil.nga.giat.geowave.datastore.cassandra.index.secondary.CassandraSecondaryIndexDataStore;
 import mil.nga.giat.geowave.datastore.cassandra.metadata.CassandraAdapterIndexMappingStore;
@@ -43,7 +47,9 @@ import mil.nga.giat.geowave.datastore.cassandra.query.CassandraRowPrefixQuery;
 public class CassandraDataStore extends
 		BaseDataStore
 {
+	public static final Integer PARTITIONS = 4;
 	private final CassandraOperations operations;
+	private static long counter = 0;
 
 	public CassandraDataStore(
 			final CassandraOperations operations ) {
@@ -236,6 +242,7 @@ public class CassandraDataStore extends
 			final IngestCallback callback,
 			final Closeable closable ) {
 		return new CassandraIndexWriter(
+				this,
 				adapter,
 				index,
 				operations,
@@ -257,16 +264,64 @@ public class CassandraDataStore extends
 			DataStoreEntryInfo ingestInfo,
 			List<FieldInfo<?>> fieldInfoList,
 			boolean ensureUniqueId ) {
-		// TODO Auto-generated method stub
-		return null;
+		final List<GeoWaveRow> rows = new ArrayList<GeoWaveRow>();
+		final List<byte[]> fieldInfoBytesList = new ArrayList<>();
+		int totalLength = 0;
+		// TODO potentially another hack, but if there is only one field, don't
+		// need to write the length
+		if (ingestInfo.getFieldInfo().size() == 1) {
+			byte[] value = ingestInfo.getFieldInfo().get(
+					0).getWrittenValue();
+			fieldInfoBytesList.add(value);
+			totalLength += value.length;
+		}
+		else {
+			for (final FieldInfo<?> fieldInfo : ingestInfo.getFieldInfo()) {
+				final ByteBuffer fieldInfoBytes = ByteBuffer.allocate(4 + fieldInfo.getWrittenValue().length);
+				fieldInfoBytes.putInt(fieldInfo.getWrittenValue().length);
+				fieldInfoBytes.put(fieldInfo.getWrittenValue());
+				fieldInfoBytesList.add(fieldInfoBytes.array());
+				totalLength += fieldInfoBytes.array().length;
+			}
+		}
+		final ByteBuffer allFields = ByteBuffer.allocate(totalLength);
+		for (final byte[] bytes : fieldInfoBytesList) {
+			allFields.put(bytes);
+		}
+		for (final ByteArrayId insertionId : ingestInfo.getInsertionIds()) {
+			allFields.rewind();
+			ByteArrayId uniqueInsertionId;
+			if (ensureUniqueId) {
+				uniqueInsertionId = DataStoreUtils.ensureUniqueId(
+						insertionId.getBytes(),
+						false);
+			}
+			else {
+				uniqueInsertionId = insertionId;
+			}
+			rows.add(new CassandraRow(
+					new byte[] {
+						(byte) (counter++ % PARTITIONS)
+					},
+					ingestInfo.getDataId(),
+					adapterId,
+					uniqueInsertionId.getBytes(),
+					// TODO: add field mask
+					new byte[] {},
+					allFields.array()));
+		}
+		
+		return rows;
 	}
 
 	@Override
 	public void write(
 			Writer writer,
-			Iterable<GeoWaveRow> rows ) {
-		// TODO Auto-generated method stub
-
+			Iterable<GeoWaveRow> rows,
+			final String columnFamily ) {
+		for (GeoWaveRow geowaveRow : rows) {
+			CassandraRow cassRow = (CassandraRow)geowaveRow;
+			((CassandraWriter)writer).write(cassRow);
+		}
 	}
-
 }

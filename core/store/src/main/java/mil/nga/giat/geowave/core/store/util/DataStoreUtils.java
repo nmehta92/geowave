@@ -876,7 +876,8 @@ public class DataStoreUtils
 		try {
 			dataStore.write(
 					writer,
-					rows);
+					rows,
+					writableAdapter.getAdapterId().getString());
 		}
 		catch (final Exception e) {
 			LOGGER.warn(

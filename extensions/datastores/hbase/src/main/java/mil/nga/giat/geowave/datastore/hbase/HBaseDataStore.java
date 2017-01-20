@@ -644,7 +644,8 @@ public class HBaseDataStore extends
 	@Override
 	public void write(
 			Writer writer,
-			Iterable<GeoWaveRow> rows ) {
+			Iterable<GeoWaveRow> rows,
+			final String columnFamily ) {
 		final List<RowMutations> mutations = new ArrayList<RowMutations>();
 
 		for (GeoWaveRow geoWaveRow : rows) {
@@ -675,6 +676,15 @@ public class HBaseDataStore extends
 			mutations.add(mutation);
 		}
 
-		((HBaseWriter) writer).write(mutations);
+		try {
+			((HBaseWriter) writer).write(
+					mutations,
+					columnFamily);
+		}
+		catch (IOException e) {
+			LOGGER.error(
+					"Error writing to HBase table",
+					e);
+		}
 	}
 }

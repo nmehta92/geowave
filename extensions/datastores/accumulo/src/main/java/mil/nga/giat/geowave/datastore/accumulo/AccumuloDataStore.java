@@ -655,7 +655,8 @@ public class AccumuloDataStore extends
 	@Override
 	public void write(
 			Writer writer,
-			Iterable<GeoWaveRow> rows ) {
+			Iterable<GeoWaveRow> rows,
+			final String columnFamily ) {
 		// TODO Auto-generated method stub
 
 	}
