@@ -5,6 +5,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
@@ -16,7 +18,6 @@ import mil.nga.giat.geowave.core.store.DataStoreOptions;
 import mil.nga.giat.geowave.core.store.IndexWriter;
 import mil.nga.giat.geowave.core.store.adapter.AdapterStore;
 import mil.nga.giat.geowave.core.store.adapter.DataAdapter;
-import mil.nga.giat.geowave.core.store.adapter.RowMergingDataAdapter;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DuplicateEntryCount;
 import mil.nga.giat.geowave.core.store.base.BaseDataStore;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
@@ -47,6 +48,8 @@ import mil.nga.giat.geowave.datastore.cassandra.query.CassandraRowPrefixQuery;
 public class CassandraDataStore extends
 		BaseDataStore
 {
+	private final static Logger LOGGER = Logger.getLogger(CassandraDataStore.class);
+
 	public static final Integer PARTITIONS = 4;
 	private final CassandraOperations operations;
 	private static long counter = 0;
@@ -265,31 +268,17 @@ public class CassandraDataStore extends
 			List<FieldInfo<?>> fieldInfoList,
 			boolean ensureUniqueId ) {
 		final List<GeoWaveRow> rows = new ArrayList<GeoWaveRow>();
-		final List<byte[]> fieldInfoBytesList = new ArrayList<>();
-		int totalLength = 0;
-		// TODO potentially another hack, but if there is only one field, don't
-		// need to write the length
-		if (ingestInfo.getFieldInfo().size() == 1) {
-			byte[] value = ingestInfo.getFieldInfo().get(
-					0).getWrittenValue();
-			fieldInfoBytesList.add(value);
-			totalLength += value.length;
+		
+		// FieldInfoList is a single composite FieldInfo at this point
+		if (fieldInfoList.size() < 1) {
+			LOGGER.error("Error ingesting data for Cassandra: Empty FieldInfoList!");
+			return null;
 		}
-		else {
-			for (final FieldInfo<?> fieldInfo : ingestInfo.getFieldInfo()) {
-				final ByteBuffer fieldInfoBytes = ByteBuffer.allocate(4 + fieldInfo.getWrittenValue().length);
-				fieldInfoBytes.putInt(fieldInfo.getWrittenValue().length);
-				fieldInfoBytes.put(fieldInfo.getWrittenValue());
-				fieldInfoBytesList.add(fieldInfoBytes.array());
-				totalLength += fieldInfoBytes.array().length;
-			}
-		}
-		final ByteBuffer allFields = ByteBuffer.allocate(totalLength);
-		for (final byte[] bytes : fieldInfoBytesList) {
-			allFields.put(bytes);
-		}
+		
+		byte[] fieldMask = fieldInfoList.get(0).getDataValue().getId().getBytes();
+		byte[] value = fieldInfoList.get(0).getWrittenValue();
+
 		for (final ByteArrayId insertionId : ingestInfo.getInsertionIds()) {
-			allFields.rewind();
 			ByteArrayId uniqueInsertionId;
 			if (ensureUniqueId) {
 				uniqueInsertionId = DataStoreUtils.ensureUniqueId(
@@ -306,9 +295,8 @@ public class CassandraDataStore extends
 					ingestInfo.getDataId(),
 					adapterId,
 					uniqueInsertionId.getBytes(),
-					// TODO: add field mask
-					new byte[] {},
-					allFields.array()));
+					fieldMask,
+					value));
 		}
 		
 		return rows;
