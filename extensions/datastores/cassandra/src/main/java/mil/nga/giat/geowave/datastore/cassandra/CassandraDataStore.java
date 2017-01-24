@@ -5,12 +5,15 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
+import javassist.bytecode.ByteArray;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
+import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.DataStoreOperations;
@@ -49,8 +52,11 @@ public class CassandraDataStore extends
 		BaseDataStore
 {
 	private final static Logger LOGGER = Logger.getLogger(CassandraDataStore.class);
+	
+	static {
+		LOGGER.setLevel(Level.DEBUG);
+	}
 
-	public static final Integer PARTITIONS = 4;
 	private final CassandraOperations operations;
 	private static long counter = 0;
 
@@ -288,9 +294,10 @@ public class CassandraDataStore extends
 			else {
 				uniqueInsertionId = insertionId;
 			}
+			
 			rows.add(new CassandraRow(
 					new byte[] {
-						(byte) (counter++ % PARTITIONS)
+						(byte) (counter++ % CassandraIndexWriter.PARTITIONS)
 					},
 					ingestInfo.getDataId(),
 					adapterId,

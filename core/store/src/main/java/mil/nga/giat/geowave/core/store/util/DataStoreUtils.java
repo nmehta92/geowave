@@ -597,14 +597,8 @@ public class DataStoreUtils
 			final ScanCallback<T, R> scanCallback ) {
 		final byte[] dataId = row.getDataId();
 		final byte[] adapterId = row.getAdapterId();
-		final GeoWaveRowImpl rowId = new GeoWaveRowImpl(
-				row.getIndex(),
-				dataId,
-				adapterId,
-				1);
 		return (T) decodeRowObj(
 				row,
-				rowId,
 				adapterStore,
 				clientFilter,
 				index,
@@ -613,14 +607,12 @@ public class DataStoreUtils
 
 	private static <T, R extends GeoWaveRow> Object decodeRowObj(
 			final R row,
-			final GeoWaveRowImpl rowId,
 			final AdapterStore adapterStore,
 			final QueryFilter clientFilter,
 			final PrimaryIndex index,
 			final ScanCallback<T, R> scanCallback ) {
 		final Pair<T, DataStoreEntryInfo> pair = decodeRow(
 				row,
-				rowId,
 				null,
 				adapterStore,
 				clientFilter,
@@ -633,7 +625,6 @@ public class DataStoreUtils
 	@SuppressWarnings("unchecked")
 	public static <T, R extends GeoWaveRow> Pair<T, DataStoreEntryInfo> decodeRow(
 			final R row,
-			final GeoWaveRowImpl rowId,
 			DataAdapter<T> dataAdapter,
 			final AdapterStore adapterStore,
 			final QueryFilter clientFilter,
@@ -641,8 +632,8 @@ public class DataStoreUtils
 			final ScanCallback<T, R> scanCallback ) {
 		if (dataAdapter == null) {
 			if (adapterStore != null) {
-				dataAdapter = (DataAdapter<T>) adapterStore.getAdapter(new ByteArrayId(
-						rowId.getAdapterId()));
+				ByteArrayId adapterId = new ByteArrayId(row.getAdapterId());				
+				dataAdapter = (DataAdapter<T>) adapterStore.getAdapter(adapterId);
 			}
 			if (dataAdapter == null) {
 				LOGGER.error("Could not decode row from iterator. Either adapter or adapter store must be non-null.");
@@ -663,7 +654,7 @@ public class DataStoreUtils
 		final CommonIndexModel indexModel = index.getIndexModel();
 		final byte[] flattenedValue = row.getValue();
 		final ByteBuffer input = ByteBuffer.wrap(flattenedValue);
-		int i = 0;
+		
 		// find repeated field IDs in the common index model and skip their
 		// position
 		final Set<ByteArrayId> fieldIds = new HashSet<ByteArrayId>();
@@ -689,67 +680,64 @@ public class DataStoreUtils
 					new byte[] {}));
 		}
 		else {
-			final Set<Integer> skipSet = new HashSet<Integer>();
-			for (final NumericDimensionField<? extends CommonIndexValue> f : indexModel.getDimensions()) {
-				if (!fieldIds.add(f.getFieldId())) {
-					// if the field ID is repeated, make sure we don't repeat
-					// the
-					// field position when reading the values
-					skipSet.add(i);
-				}
-				i++;
-			}
-			i = 0;
+			// Get the list of valid field positions from the row's field mask
+			List<Integer> fieldPositions = BitmaskUtils.getFieldPositions(row.getFieldMask());
+			
+			// Collect the valid fields
+			int fieldIndex = 0;
 			while (input.hasRemaining()) {
 				final int fieldLength = input.getInt();
 
 				final byte[] fieldValueBytes = new byte[fieldLength];
 				input.get(fieldValueBytes);
-				if (skipSet.contains(i)) {
-					i++;
-				}
-				flattenedFieldInfoList.add(new FlattenedFieldInfo(
-						i++,
-						fieldValueBytes));
+				
+				if (fieldPositions.contains(fieldIndex)) {
+					flattenedFieldInfoList.add(new FlattenedFieldInfo(
+							fieldIndex,
+							fieldValueBytes));
+				}	
+				
+				fieldIndex++;
 			}
-			// above is a temporary hack, even below this likely needs some work
+				
+			// below this likely needs some work
 			final Set<ByteArrayId> visitedFieldIds = new HashSet<>();
-			for (final FlattenedFieldInfo fieldInfo : flattenedFieldInfoList) {
+			for (final FlattenedFieldInfo flatInfo : flattenedFieldInfoList) {
 				final ByteArrayId fieldId = dataAdapter.getFieldIdForPosition(
 						indexModel,
-						fieldInfo.getFieldPosition());
+						flatInfo.getFieldPosition());
 				if (!visitedFieldIds.contains(fieldId)) {
 					visitedFieldIds.add(fieldId);
 					final FieldReader<? extends CommonIndexValue> indexFieldReader = indexModel.getReader(fieldId);
 					if (indexFieldReader != null) {
-						final CommonIndexValue indexValue = indexFieldReader.readField(fieldInfo.getValue());
+						final CommonIndexValue indexValue = indexFieldReader.readField(flatInfo.getValue());
 						final PersistentValue<CommonIndexValue> val = new PersistentValue<CommonIndexValue>(
 								fieldId,
 								indexValue);
 						indexData.addValue(val);
 						fieldInfoList.add(DataStoreUtils.getFieldInfo(
 								val,
-								fieldInfo.getValue(),
+								flatInfo.getValue(),
 								new byte[] {}));
 					}
 					else {
 						final FieldReader<?> extFieldReader = dataAdapter.getReader(fieldId);
 						if (extFieldReader != null) {
-							final Object value = extFieldReader.readField(fieldInfo.getValue());
+							final Object value = extFieldReader.readField(flatInfo.getValue());
 							final PersistentValue<Object> val = new PersistentValue<Object>(
 									fieldId,
 									value);
 							extendedData.addValue(val);
 							fieldInfoList.add(DataStoreUtils.getFieldInfo(
 									val,
-									fieldInfo.getValue(),
+									flatInfo.getValue(),
 									new byte[] {}));
 						}
 						else {
 							LOGGER.error("field reader not found for data entry, the value may be ignored");
 							unknownData.addValue(new PersistentValue<byte[]>(
 									fieldId,
-									fieldInfo.getValue()));
+									flatInfo.getValue()));
 						}
 					}
 				}
@@ -758,10 +746,10 @@ public class DataStoreUtils
 		final IndexedAdapterPersistenceEncoding encodedRow = new IndexedAdapterPersistenceEncoding(
 				dataAdapter.getAdapterId(),
 				new ByteArrayId(
-						rowId.getDataId()),
+						row.getDataId()),
 				new ByteArrayId(
-						rowId.getIndex()),
-				rowId.getNumberOfDuplicates(),
+						row.getIndex()),
+				row.getNumberOfDuplicates(),
 				indexData,
 				unknownData,
 				extendedData);
@@ -774,11 +762,11 @@ public class DataStoreUtils
 							encodedRow,
 							index),
 					new DataStoreEntryInfo(
-							rowId.getDataId(),
+							row.getDataId(),
 							Arrays.asList(new ByteArrayId(
-									rowId.getIndex())),
+									row.getIndex())),
 							Arrays.asList(new ByteArrayId(
-									rowId.getIndex())),
+									row.getIndex())),
 							fieldInfoList));
 			if (scanCallback != null) {
 				scanCallback.entryScanned(

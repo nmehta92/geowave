@@ -17,7 +17,6 @@ public class CassandraIndexWriter<T> extends
 {
 	public static final Integer PARTITIONS = 4;
 	protected final CassandraOperations operations;
-	private static long counter = 0;
 	protected final CassandraDataStore dataStore;
 
 	public CassandraIndexWriter(
