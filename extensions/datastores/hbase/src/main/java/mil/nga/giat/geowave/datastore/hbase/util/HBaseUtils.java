@@ -525,9 +525,9 @@ public class HBaseUtils
 				dataId.length - UNIQUE_ADDED_BYTES);
 
 		return new GeoWaveRowImpl(
-				rowId.getIndex(),
 				dataId,
 				rowId.getAdapterId(),
+				rowId.getIndex(),
 				rowId.getNumberOfDuplicates()).getRowId();
 	}
 }

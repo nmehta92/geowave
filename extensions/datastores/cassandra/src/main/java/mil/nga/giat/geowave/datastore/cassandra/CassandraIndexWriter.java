@@ -56,7 +56,7 @@ public class CassandraIndexWriter<T> extends
 				index,
 				entry,
 				writer,
-				visibilityWriter);
+				DataStoreUtils.UNCONSTRAINED_VISIBILITY);
 	}
 
 }

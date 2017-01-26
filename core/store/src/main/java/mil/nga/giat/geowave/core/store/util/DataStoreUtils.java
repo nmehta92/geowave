@@ -34,7 +34,6 @@ import mil.nga.giat.geowave.core.store.adapter.statistics.RowRangeHistogramStati
 import mil.nga.giat.geowave.core.store.base.BaseDataStore;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo.FieldInfo;
-import mil.nga.giat.geowave.core.store.base.EntryRowID;
 import mil.nga.giat.geowave.core.store.base.Writer;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
 import mil.nga.giat.geowave.core.store.data.DataWriter;
@@ -75,6 +74,17 @@ public class DataStoreUtils
 	public static final UniformVisibilityWriter UNCONSTRAINED_VISIBILITY = new UniformVisibilityWriter(
 			new UnconstrainedVisibilityHandler());
 
+	public static List<ByteArrayId> getUniqueDimensionFields(
+			final CommonIndexModel model ) {
+		final List<ByteArrayId> dimensionFieldIds = new ArrayList<>();
+		for (final NumericDimensionField<? extends CommonIndexValue> dimension : model.getDimensions()) {
+			if (!dimensionFieldIds.contains(dimension.getFieldId())) {
+				dimensionFieldIds.add(dimension.getFieldId());
+			}
+		}
+		return dimensionFieldIds;
+	}
+
 	public static <T> long cardinality(
 			final PrimaryIndex index,
 			final Map<ByteArrayId, DataStatistics<T>> stats,
@@ -97,6 +107,11 @@ public class DataStoreUtils
 			final GeoWaveRow rowId1,
 			final GeoWaveRow rowId2 ) {
 
+		if (!Arrays.equals(
+				rowId1.getIndex(),
+				rowId2.getIndex())) {
+			return false;
+		}
 		if (!Arrays.equals(
 				rowId1.getAdapterId(),
 				rowId2.getAdapterId())) {
@@ -343,10 +358,10 @@ public class DataStoreUtils
 			// metadata in our de-duplication
 			// step
 			rowIds.add(new ByteArrayId(
-					new EntryRowID(
-							indexId,
+					new GeoWaveRowImpl(
 							dataId,
 							adapterId,
+							indexId,
 							enableDeduplication ? numberOfDuplicates : -1).getRowId()));
 		}
 	}
@@ -786,38 +801,38 @@ public class DataStoreUtils
 		final ByteBuffer buf = ByteBuffer.allocate(id.length + UNIQUE_ADDED_BYTES);
 
 		byte[] metadata = null;
-		byte[] data;
+		byte[] dataId;
 		if (hasMetadata) {
-			metadata = Arrays.copyOfRange(
+			int metadataStartIdx = id.length - 12;
+			byte[] lengths = Arrays.copyOfRange(
 					id,
-					id.length - 12,
+					metadataStartIdx,
 					id.length);
 
-			final ByteBuffer metadataBuf = ByteBuffer.wrap(metadata);
-			final int adapterIdLength = metadataBuf.getInt();
-			int idLength = metadataBuf.getInt();
-			idLength += UNIQUE_ADDED_BYTES;
-			final int duplicates = metadataBuf.getInt();
+			final ByteBuffer lengthsBuf = ByteBuffer.wrap(lengths);
+			final int adapterIdLength = lengthsBuf.getInt();
+			int dataIdLength = lengthsBuf.getInt();
+			dataIdLength += UNIQUE_ADDED_BYTES;
+			final int duplicates = lengthsBuf.getInt();
 
-			final ByteBuffer newMetaData = ByteBuffer.allocate(metadata.length);
-			newMetaData.putInt(adapterIdLength);
-			newMetaData.putInt(idLength);
-			newMetaData.putInt(duplicates);
-
-			metadata = newMetaData.array();
-
-			data = Arrays.copyOfRange(
+			final ByteBuffer newLengths = ByteBuffer.allocate(12);
+			newLengths.putInt(adapterIdLength);
+			newLengths.putInt(dataIdLength);
+			newLengths.putInt(duplicates);
+			newLengths.rewind();
+			metadata = newLengths.array();
+			dataId = Arrays.copyOfRange(
 					id,
 					0,
-					id.length - 12);
+					metadataStartIdx);
 		}
 		else {
-			data = id;
+			dataId = id;
 		}
 
-		buf.put(data);
+		buf.put(dataId);
 
-		final long timestamp = System.nanoTime();
+		final long timestamp = System.currentTimeMillis();
 		buf.put(new byte[] {
 			UNIQUE_ID_DELIMITER
 		});

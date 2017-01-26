@@ -281,27 +281,28 @@ public class CassandraDataStore extends
 			return null;
 		}
 		
+		// The single FieldInfo contains the fieldMask in the ID, and the flattened fields in the written value
 		byte[] fieldMask = fieldInfoList.get(0).getDataValue().getId().getBytes();
 		byte[] value = fieldInfoList.get(0).getWrittenValue();
 
 		for (final ByteArrayId insertionId : ingestInfo.getInsertionIds()) {
-			ByteArrayId uniqueInsertionId;
+			byte[] uniqueDataId;
 			if (ensureUniqueId) {
-				uniqueInsertionId = DataStoreUtils.ensureUniqueId(
-						insertionId.getBytes(),
-						false);
+				uniqueDataId = DataStoreUtils.ensureUniqueId(
+						ingestInfo.getDataId(),
+						false).getBytes();
 			}
 			else {
-				uniqueInsertionId = insertionId;
+				uniqueDataId = ingestInfo.getDataId();
 			}
 			
 			rows.add(new CassandraRow(
 					new byte[] {
 						(byte) (counter++ % CassandraIndexWriter.PARTITIONS)
 					},
-					ingestInfo.getDataId(),
+					uniqueDataId,
 					adapterId,
-					uniqueInsertionId.getBytes(),
+					insertionId.getBytes(),
 					fieldMask,
 					value));
 		}

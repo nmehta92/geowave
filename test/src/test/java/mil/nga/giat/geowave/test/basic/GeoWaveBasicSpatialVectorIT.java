@@ -68,7 +68,7 @@ public class GeoWaveBasicSpatialVectorIT extends
 
 	@Test
 	public void testMultiThreadedIngestAndQuerySpatialPointsAndLines() {
-		testIngestAndQuerySpatialPointsAndLines(4);
+		testIngestAndQuerySpatialPointsAndLines(1);
 	}
 
 	public void testIngestAndQuerySpatialPointsAndLines(

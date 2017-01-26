@@ -83,6 +83,11 @@ public class CassandraOperations implements
 		state = KeyspaceStatePool.getInstance().getCachedState(
 				options.getContactPoint(),
 				gwNamespace);
+		this.options = options.getAdditionalOptions();
+		initKeyspace();
+	}
+
+	public void initKeyspace() {
 		// TODO consider exposing important keyspace options through commandline
 		// such as understanding how to properly enable cassandra in production
 		// - with data centers and snitch, for now because this is only creating
@@ -94,9 +99,8 @@ public class CassandraOperations implements
 						"class",
 						"SimpleStrategy",
 						"replication_factor",
-						options.getAdditionalOptions().getReplicationFactor())).durableWrites(
-				options.getAdditionalOptions().isDurableWrites()));
-		this.options = options.getAdditionalOptions();
+						options.getReplicationFactor())).durableWrites(
+				options.isDurableWrites()));
 	}
 
 	@Override
@@ -271,7 +275,7 @@ public class CassandraOperations implements
 				preparedRead,
 				this,
 				rowIdx,
-				adapterId.getBytes());
+				adapterId == null ? null : adapterId.getBytes());
 
 	}
 
@@ -366,6 +370,7 @@ public class CassandraOperations implements
 	@Override
 	public void deleteAll()
 			throws Exception {
+		state.tableExistsCache.clear();
 		session.execute(SchemaBuilder.dropKeyspace(
 				gwNamespace).ifExists());
 	}
