@@ -52,7 +52,7 @@ public class CassandraDataStore extends
 		BaseDataStore
 {
 	private final static Logger LOGGER = Logger.getLogger(CassandraDataStore.class);
-	
+
 	static {
 		LOGGER.setLevel(Level.DEBUG);
 	}
@@ -274,16 +274,19 @@ public class CassandraDataStore extends
 			List<FieldInfo<?>> fieldInfoList,
 			boolean ensureUniqueId ) {
 		final List<GeoWaveRow> rows = new ArrayList<GeoWaveRow>();
-		
+
 		// FieldInfoList is a single composite FieldInfo at this point
 		if (fieldInfoList.size() < 1) {
 			LOGGER.error("Error ingesting data for Cassandra: Empty FieldInfoList!");
 			return null;
 		}
-		
-		// The single FieldInfo contains the fieldMask in the ID, and the flattened fields in the written value
-		byte[] fieldMask = fieldInfoList.get(0).getDataValue().getId().getBytes();
-		byte[] value = fieldInfoList.get(0).getWrittenValue();
+
+		// The single FieldInfo contains the fieldMask in the ID, and the
+		// flattened fields in the written value
+		byte[] fieldMask = fieldInfoList.get(
+				0).getDataValue().getId().getBytes();
+		byte[] value = fieldInfoList.get(
+				0).getWrittenValue();
 
 		for (final ByteArrayId insertionId : ingestInfo.getInsertionIds()) {
 			byte[] uniqueDataId;
@@ -295,7 +298,7 @@ public class CassandraDataStore extends
 			else {
 				uniqueDataId = ingestInfo.getDataId();
 			}
-			
+
 			rows.add(new CassandraRow(
 					new byte[] {
 						(byte) (counter++ % CassandraIndexWriter.PARTITIONS)
@@ -306,7 +309,7 @@ public class CassandraDataStore extends
 					fieldMask,
 					value));
 		}
-		
+
 		return rows;
 	}
 
@@ -316,8 +319,8 @@ public class CassandraDataStore extends
 			Iterable<GeoWaveRow> rows,
 			final String columnFamily ) {
 		for (GeoWaveRow geowaveRow : rows) {
-			CassandraRow cassRow = (CassandraRow)geowaveRow;
-			((CassandraWriter)writer).write(cassRow);
+			CassandraRow cassRow = (CassandraRow) geowaveRow;
+			((CassandraWriter) writer).write(cassRow);
 		}
 	}
 }

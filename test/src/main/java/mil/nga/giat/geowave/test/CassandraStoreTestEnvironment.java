@@ -335,18 +335,18 @@ public class CassandraStoreTestEnvironment extends
 	@Override
 	public void setup() {
 		if (!running) {
-		if (TEMP_DIR.exists()) {
-			cleanTempDir();
-		}
+			if (TEMP_DIR.exists()) {
+				cleanTempDir();
+			}
 			if (!TEMP_DIR.mkdirs()) {
 				LOGGER.warn("Unable to create temporary cassandra directory");
 			}
-		if (CLUSTERED_MODE) {
-			new StartGeoWaveCluster().start();
-		}
-		else {
-			new StartGeoWaveStandalone().start();
-		}
+			if (CLUSTERED_MODE) {
+				new StartGeoWaveCluster().start();
+			}
+			else {
+				new StartGeoWaveStandalone().start();
+			}
 			running = true;
 		}
 	}
@@ -354,11 +354,11 @@ public class CassandraStoreTestEnvironment extends
 	@Override
 	public void tearDown() {
 		if (running) {
-		if (CLUSTERED_MODE) {
-			new StopGeoWaveCluster().stop();
-		}
-		else {
-			new StopGeoWaveStandalone().stop();
+			if (CLUSTERED_MODE) {
+				new StopGeoWaveCluster().stop();
+			}
+			else {
+				new StopGeoWaveStandalone().stop();
 			}
 			running = false;
 		}

@@ -610,8 +610,6 @@ public class DataStoreUtils
 			final QueryFilter clientFilter,
 			final PrimaryIndex index,
 			final ScanCallback<T, R> scanCallback ) {
-		final byte[] dataId = row.getDataId();
-		final byte[] adapterId = row.getAdapterId();
 		return (T) decodeRowObj(
 				row,
 				adapterStore,
@@ -647,7 +645,8 @@ public class DataStoreUtils
 			final ScanCallback<T, R> scanCallback ) {
 		if (dataAdapter == null) {
 			if (adapterStore != null) {
-				ByteArrayId adapterId = new ByteArrayId(row.getAdapterId());				
+				ByteArrayId adapterId = new ByteArrayId(
+						row.getAdapterId());
 				dataAdapter = (DataAdapter<T>) adapterStore.getAdapter(adapterId);
 			}
 			if (dataAdapter == null) {
@@ -669,11 +668,6 @@ public class DataStoreUtils
 		final CommonIndexModel indexModel = index.getIndexModel();
 		final byte[] flattenedValue = row.getValue();
 		final ByteBuffer input = ByteBuffer.wrap(flattenedValue);
-		
-		// find repeated field IDs in the common index model and skip their
-		// position
-		final Set<ByteArrayId> fieldIds = new HashSet<ByteArrayId>();
-		// below is completely a temporary hack
 
 		// this in particular is a terrible hack to find raster data
 		if (dataAdapter.getFieldIdForPosition(
@@ -697,7 +691,7 @@ public class DataStoreUtils
 		else {
 			// Get the list of valid field positions from the row's field mask
 			List<Integer> fieldPositions = BitmaskUtils.getFieldPositions(row.getFieldMask());
-			
+
 			// Collect the valid fields
 			int fieldIndex = 0;
 			while (input.hasRemaining()) {
@@ -705,16 +699,16 @@ public class DataStoreUtils
 
 				final byte[] fieldValueBytes = new byte[fieldLength];
 				input.get(fieldValueBytes);
-				
+
 				if (fieldPositions.contains(fieldIndex)) {
 					flattenedFieldInfoList.add(new FlattenedFieldInfo(
 							fieldIndex,
 							fieldValueBytes));
-				}	
-				
+				}
+
 				fieldIndex++;
 			}
-				
+
 			// below this likely needs some work
 			final Set<ByteArrayId> visitedFieldIds = new HashSet<>();
 			for (final FlattenedFieldInfo flatInfo : flattenedFieldInfoList) {
