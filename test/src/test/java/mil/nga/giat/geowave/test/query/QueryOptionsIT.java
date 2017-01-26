@@ -62,8 +62,7 @@ public class QueryOptionsIT
 
 	@GeoWaveTestStore({
 		GeoWaveStoreType.ACCUMULO,
-		GeoWaveStoreType.HBASE,
-		GeoWaveStoreType.BIGTABLE
+		GeoWaveStoreType.HBASE
 	})
 	protected DataStorePluginOptions dataStoreOptions;
 
