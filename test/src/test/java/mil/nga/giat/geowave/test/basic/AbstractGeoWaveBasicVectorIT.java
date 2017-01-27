@@ -319,8 +319,7 @@ abstract public class AbstractGeoWaveBasicVectorIT
 							expectedStat.getStatisticsId());
 
 					// Only test RANGE and COUNT in the multithreaded case. None
-					// of the other
-					// statistics will match!
+					// of the other statistics will match!
 					if (multithreaded) {
 						if (!(expectedStat.getStatisticsId().getString().startsWith(
 								FeatureNumericRangeStatistics.STATS_TYPE + "#") || expectedStat

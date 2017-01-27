@@ -286,10 +286,10 @@ public abstract class HBaseFilteredIndexQuery extends
 				if (range.getStart() != null) {
 					scanner.setStartRow(range.getStart().getBytes());
 					if (!range.isSingleValue()) {
-						scanner.setStopRow(HBaseUtils.getNextPrefix(range.getEnd().getBytes()));
+						scanner.setStopRow(range.getEndAsNextPrefix().getBytes());
 					}
 					else {
-						scanner.setStopRow(HBaseUtils.getNextPrefix(range.getStart().getBytes()));
+						scanner.setStopRow(range.getStart().getNextPrefix());
 					}
 				}
 
@@ -401,10 +401,10 @@ public abstract class HBaseFilteredIndexQuery extends
 					final byte[] startRow = range.getStart().getBytes();
 					byte[] stopRow;
 					if (!range.isSingleValue()) {
-						stopRow = HBaseUtils.getNextPrefix(range.getEnd().getBytes());
+						stopRow = range.getEndAsNextPrefix().getBytes();
 					}
 					else {
-						stopRow = HBaseUtils.getNextPrefix(range.getStart().getBytes());
+						stopRow = range.getStart().getNextPrefix();
 					}
 
 					final RowRange rowRange = new RowRange(

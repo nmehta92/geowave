@@ -35,6 +35,7 @@ import mil.nga.giat.geowave.core.store.data.PersistentValue;
 import mil.nga.giat.geowave.core.store.data.VisibilityWriter;
 import mil.nga.giat.geowave.core.store.data.visibility.UnconstrainedVisibilityHandler;
 import mil.nga.giat.geowave.core.store.data.visibility.UniformVisibilityWriter;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRowImpl;
 import mil.nga.giat.geowave.core.store.filter.QueryFilter;
 import mil.nga.giat.geowave.core.store.flatten.BitmaskUtils;
@@ -49,10 +50,6 @@ public class HBaseUtils
 {
 	private final static Logger LOGGER = Logger.getLogger(HBaseUtils.class);
 
-	// we append a 0 byte, 8 bytes of timestamp, and 16 bytes of UUID when
-	// needed for uniqueness
-	public final static int UNIQUE_ADDED_BYTES = 1 + 8 + 16;
-	public final static byte UNIQUE_ID_DELIMITER = 0;
 	private static final UniformVisibilityWriter DEFAULT_VISIBILITY = new UniformVisibilityWriter(
 			new UnconstrainedVisibilityHandler());
 
@@ -96,15 +93,6 @@ public class HBaseUtils
 		}
 
 		return mutations;
-	}
-
-	// Retrieves the next incremental HBase prefix following the passed-in
-	// prefix
-	// Using a private HBase method called from the constructor of Scan
-	public static byte[] getNextPrefix(
-			final byte[] prefix ) {
-		return new Scan().setRowPrefixFilter(
-				prefix).getStopRow();
 	}
 
 	public static <T> DataStoreEntryInfo write(
@@ -200,7 +188,7 @@ public class HBaseUtils
 			final byte[] fieldSubsetBitmask,
 			final boolean decodeRow ) {
 
-		final GeoWaveRowImpl rowId = new GeoWaveRowImpl(
+		final GeoWaveRow rowId = new GeoWaveRowImpl(
 				row.getRow());
 		return (T) decodeRowObj(
 				row,
@@ -216,7 +204,7 @@ public class HBaseUtils
 
 	public static Object decodeRow(
 			final Result row,
-			final GeoWaveRowImpl rowId,
+			final GeoWaveRow rowId,
 			final AdapterStore adapterStore,
 			final QueryFilter clientFilter,
 			final PrimaryIndex index,
@@ -235,7 +223,7 @@ public class HBaseUtils
 
 	private static Object decodeRowObj(
 			final Result row,
-			final GeoWaveRowImpl rowId,
+			final GeoWaveRow rowId,
 			final DataAdapter dataAdapter,
 			final AdapterStore adapterStore,
 			final QueryFilter clientFilter,
@@ -259,7 +247,7 @@ public class HBaseUtils
 	@SuppressWarnings("unchecked")
 	public static Pair<Object, DataStoreEntryInfo> decodeRow(
 			final Result row,
-			final GeoWaveRowImpl rowId,
+			final GeoWaveRow rowId,
 			final DataAdapter dataAdapter,
 			final AdapterStore adapterStore,
 			final QueryFilter clientFilter,
@@ -484,50 +472,5 @@ public class HBaseUtils
 				scanner.close();
 			}
 		}
-
-	}
-
-	public static boolean rowIdsMatch(
-			final GeoWaveRowImpl rowId1,
-			final GeoWaveRowImpl rowId2 ) {
-
-		if (!Arrays.equals(
-				rowId1.getAdapterId(),
-				rowId2.getAdapterId())) {
-			return false;
-		}
-
-		if (Arrays.equals(
-				rowId1.getDataId(),
-				rowId2.getDataId())) {
-			return true;
-		}
-
-		return Arrays.equals(
-				removeUniqueId(rowId1.getRowId()),
-				removeUniqueId(rowId2.getRowId()));
-	}
-
-	public static byte[] removeUniqueId(
-			final byte[] rowId ) {
-
-		final GeoWaveRowImpl tempRow = new GeoWaveRowImpl(
-				rowId);
-		byte[] dataId = tempRow.getDataId();
-
-		if ((dataId.length < UNIQUE_ADDED_BYTES) || (dataId[dataId.length - UNIQUE_ADDED_BYTES] != UNIQUE_ID_DELIMITER)) {
-			return rowId;
-		}
-
-		dataId = Arrays.copyOfRange(
-				dataId,
-				0,
-				dataId.length - UNIQUE_ADDED_BYTES);
-
-		return new GeoWaveRowImpl(
-				dataId,
-				tempRow.getAdapterId(),
-				tempRow.getIndex(),
-				tempRow.getNumberOfDuplicates()).getRowId();
 	}
 }

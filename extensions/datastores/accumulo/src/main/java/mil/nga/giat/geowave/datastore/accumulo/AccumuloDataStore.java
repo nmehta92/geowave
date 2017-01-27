@@ -569,20 +569,15 @@ public class AccumuloDataStore extends
 							id.getBytes())));
 				}
 			}
-			if (deleter instanceof ClosableBatchDeleter) {
-				final BatchDeleter batchDeleter = ((ClosableBatchDeleter) deleter).getDeleter();
-				batchDeleter.setRanges(rowRanges);
-				try {
-					batchDeleter.delete();
-				}
-				catch (MutationsRejectedException | TableNotFoundException e) {
-					LOGGER.warn(
-							"Unable to delete row: " + entry.toString(),
-							e);
-				}
+			final BatchDeleter batchDeleter = getDeleter();
+			batchDeleter.setRanges(rowRanges);
+			try {
+				batchDeleter.delete();
 			}
-			else {
-				LOGGER.error("Deleter incompatible with data store type");
+			catch (MutationsRejectedException | TableNotFoundException e) {
+				LOGGER.warn(
+						"Unable to delete row: " + entry.toString(),
+						e);
 			}
 		}
 	}

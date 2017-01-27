@@ -46,7 +46,6 @@ public class GeoWaveVectorSerializationIT
 	@GeoWaveTestStore({
 		GeoWaveStoreType.ACCUMULO,
 		GeoWaveStoreType.BIGTABLE,
-		GeoWaveStoreType.CASSANDRA,
 		GeoWaveStoreType.HBASE
 	})
 	protected DataStorePluginOptions dataStore;

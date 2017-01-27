@@ -50,12 +50,10 @@ import mil.nga.giat.geowave.datastore.cassandra.query.CassandraRowPrefixQuery;
 public class CassandraDataStore extends
 		BaseDataStore
 {
-	private final static Logger LOGGER = Logger.getLogger(
-			CassandraDataStore.class);
+	private final static Logger LOGGER = Logger.getLogger(CassandraDataStore.class);
 
 	static {
-		LOGGER.setLevel(
-				Level.DEBUG);
+		LOGGER.setLevel(Level.DEBUG);
 	}
 
 	private final CassandraOperations operations;
@@ -132,7 +130,7 @@ public class CassandraDataStore extends
 								return input.getBytes();
 							}
 						}).toArray(
-								new byte[][] {}),
+						new byte[][] {}),
 				adapter.getAdapterId().getBytes(),
 				authorizations);
 		return new CloseableIteratorWrapper<>(
@@ -278,8 +276,7 @@ public class CassandraDataStore extends
 
 		// FieldInfoList is a single composite FieldInfo at this point
 		if (fieldInfoList.size() < 1) {
-			LOGGER.error(
-					"Error ingesting data for Cassandra: Empty FieldInfoList!");
+			LOGGER.error("Error ingesting data for Cassandra: Empty FieldInfoList!");
 			return null;
 		}
 
@@ -291,7 +288,7 @@ public class CassandraDataStore extends
 				0).getWrittenValue();
 
 		Iterator<ByteArrayId> rowIdIterator = ingestInfo.getRowIds().iterator();
-		
+
 		for (final ByteArrayId insertionId : ingestInfo.getInsertionIds()) {
 			byte[] uniqueDataId;
 			if (ensureUniqueId) {
@@ -305,20 +302,20 @@ public class CassandraDataStore extends
 
 			// for each insertion(index) id, there's a matching rowId
 			// that contains the duplicate count
-			GeoWaveRowImpl tempRow = new GeoWaveRowImpl(rowIdIterator.next().getBytes());
+			GeoWaveRow tempRow = new GeoWaveRowImpl(
+					rowIdIterator.next().getBytes());
 			int numDuplicates = tempRow.getNumberOfDuplicates();
-			
-			rows.add(
-					new CassandraRow(
-							new byte[] {
-								(byte) (counter++ % CassandraIndexWriter.PARTITIONS)
-							},
-							uniqueDataId,
-							adapterId,
-							insertionId.getBytes(),
-							fieldMask,
-							value,
-							numDuplicates));
+
+			rows.add(new CassandraRow(
+					new byte[] {
+						(byte) (counter++ % CassandraIndexWriter.PARTITIONS)
+					},
+					uniqueDataId,
+					adapterId,
+					insertionId.getBytes(),
+					fieldMask,
+					value,
+					numDuplicates));
 		}
 
 		return rows;
@@ -331,8 +328,7 @@ public class CassandraDataStore extends
 			final String columnFamily ) {
 		for (GeoWaveRow geowaveRow : rows) {
 			CassandraRow cassRow = (CassandraRow) geowaveRow;
-			((CassandraWriter) writer).write(
-					cassRow);
+			((CassandraWriter) writer).write(cassRow);
 		}
 	}
 }
