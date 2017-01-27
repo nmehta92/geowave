@@ -376,7 +376,7 @@ public class AccumuloUtils
 		return null;
 	}
 
-	private static <T> List<Mutation> buildMutations(
+	public static <T> List<Mutation> buildMutations(
 			final byte[] adapterId,
 			final DataStoreEntryInfo ingestInfo,
 			final PrimaryIndex index,

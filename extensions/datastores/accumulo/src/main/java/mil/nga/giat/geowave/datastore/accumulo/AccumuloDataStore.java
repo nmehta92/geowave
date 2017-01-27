@@ -17,9 +17,11 @@ import org.apache.accumulo.core.client.Scanner;
 import org.apache.accumulo.core.client.ScannerBase;
 import org.apache.accumulo.core.client.TableNotFoundException;
 import org.apache.accumulo.core.data.Key;
+import org.apache.accumulo.core.data.Mutation;
 import org.apache.accumulo.core.data.Range;
 import org.apache.accumulo.core.data.Value;
 import org.apache.accumulo.core.iterators.user.WholeRowIterator;
+import org.apache.accumulo.core.security.ColumnVisibility;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
@@ -58,6 +60,7 @@ import mil.nga.giat.geowave.core.store.query.DistributableQuery;
 import mil.nga.giat.geowave.core.store.query.Query;
 import mil.nga.giat.geowave.core.store.query.QueryOptions;
 import mil.nga.giat.geowave.core.store.util.DataAdapterAndIndexCache;
+import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
 import mil.nga.giat.geowave.datastore.accumulo.index.secondary.AccumuloSecondaryIndexDataStore;
 import mil.nga.giat.geowave.datastore.accumulo.mapreduce.AccumuloSplitsProvider;
 import mil.nga.giat.geowave.datastore.accumulo.mapreduce.GeoWaveAccumuloRecordReader;
@@ -183,6 +186,7 @@ public class AccumuloDataStore extends
 			final IngestCallback callback,
 			final Closeable closable ) {
 		return new AccumuloIndexWriter(
+				this,
 				adapter,
 				index,
 				accumuloOperations,
@@ -643,8 +647,22 @@ public class AccumuloDataStore extends
 			DataStoreEntryInfo ingestInfo,
 			List<FieldInfo<?>> fieldInfoList,
 			boolean ensureUniqueId ) {
-		// TODO Auto-generated method stub
-		return null;
+		ArrayList<GeoWaveRow> rows = new ArrayList<>();
+
+		for (ByteArrayId rowId : ingestInfo.getRowIds()) {
+			if (ensureUniqueId) {
+				rowId = DataStoreUtils.ensureUniqueId(
+						rowId.getBytes(),
+						true);
+			}
+
+			AccumuloRow accumuloRow = new AccumuloRow(
+					rowId.getBytes(),
+					fieldInfoList);
+			rows.add(accumuloRow);
+		}
+
+		return rows;
 	}
 
 	@Override
@@ -652,7 +670,43 @@ public class AccumuloDataStore extends
 			Writer writer,
 			Iterable<GeoWaveRow> rows,
 			final String columnFamily ) {
-		// TODO Auto-generated method stub
+		final List<Mutation> mutations = new ArrayList<Mutation>();
 
+		for (GeoWaveRow geoWaveRow : rows) {
+			AccumuloRow accumuloRow = (AccumuloRow) geoWaveRow;
+
+			byte[] rowId = accumuloRow.getRowId();
+			byte[] adapterId = accumuloRow.getAdapterId();
+
+			final Mutation mutation = new Mutation(
+					new Text(
+							rowId));
+			for (final FieldInfo<?> fieldInfo : accumuloRow.getFieldInfoList()) {
+				if ((fieldInfo.getVisibility() != null) && (fieldInfo.getVisibility().length > 0)) {
+					mutation.put(
+							new Text(
+									adapterId),
+							new Text(
+									fieldInfo.getDataValue().getId().getBytes()),
+							new ColumnVisibility(
+									fieldInfo.getVisibility()),
+							new Value(
+									fieldInfo.getWrittenValue()));
+				}
+				else {
+					mutation.put(
+							new Text(
+									adapterId),
+							new Text(
+									fieldInfo.getDataValue().getId().getBytes()),
+							new Value(
+									fieldInfo.getWrittenValue()));
+				}
+			}
+
+			mutations.add(mutation);
+		}
+
+		writer.write(mutations);
 	}
 }
