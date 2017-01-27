@@ -3,6 +3,8 @@ package mil.nga.giat.geowave.datastore.cassandra;
 import java.nio.ByteBuffer;
 import java.util.function.BiConsumer;
 
+import org.apache.log4j.Logger;
+
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.DataType;
 import com.datastax.driver.core.PreparedStatement;
@@ -11,8 +13,12 @@ import com.datastax.driver.core.schemabuilder.Create;
 
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRowImpl;
 
-public class CassandraRow extends GeoWaveRowImpl
+public class CassandraRow extends
+		GeoWaveRowImpl
 {
+	private final static Logger LOGGER = Logger.getLogger(
+			CassandraRow.class);
+
 	private static enum ColumnType {
 		PARTITION_KEY(
 				(
@@ -32,6 +38,7 @@ public class CassandraRow extends GeoWaveRowImpl
 						final String f ) -> c.addColumn(
 								f,
 								DataType.blob()));
+		
 		private BiConsumer<Create, String> createFunction;
 
 		private ColumnType(
@@ -58,7 +65,11 @@ public class CassandraRow extends GeoWaveRowImpl
 				ColumnType.OTHER_COLUMN),
 		GW_VALUE_KEY(
 				"value",
+				ColumnType.OTHER_COLUMN),
+		GW_NUM_DUPLICATES_KEY(
+				"num_duplicates",
 				ColumnType.OTHER_COLUMN);
+		
 		private final String fieldName;
 		private ColumnType columnType;
 
@@ -101,9 +112,16 @@ public class CassandraRow extends GeoWaveRowImpl
 			final byte[] adapterId,
 			final byte[] idx,
 			final byte[] fieldMask,
-			final byte[] value ) {
-		super(dataId, adapterId, idx, fieldMask, value, 0);
-		
+			final byte[] value,
+			final int numDuplicates ) {
+		super(
+				dataId,
+				adapterId,
+				idx,
+				fieldMask,
+				value,
+				numDuplicates);
+
 		this.partitionId = partitionId;
 	}
 
@@ -120,7 +138,8 @@ public class CassandraRow extends GeoWaveRowImpl
 						CassandraField.GW_FIELD_MASK_KEY.getFieldName()).array(),
 				row.getBytes(
 						CassandraField.GW_VALUE_KEY.getFieldName()).array(),
-				0);
+				(int)(row.getBytes(
+						CassandraField.GW_NUM_DUPLICATES_KEY.getFieldName()).get(0)));
 		
 		partitionId = row.getBytes(
 				CassandraField.GW_PARTITION_ID_KEY.getFieldName()).array();
@@ -163,6 +182,10 @@ public class CassandraRow extends GeoWaveRowImpl
 				CassandraField.GW_VALUE_KEY.getBindMarkerName(),
 				ByteBuffer.wrap(
 						value),
+				ByteBuffer.class);
+		retVal.set(
+				CassandraField.GW_NUM_DUPLICATES_KEY.getBindMarkerName(),
+				ByteBuffer.wrap(new byte[] { (byte)numberOfDuplicates }),
 				ByteBuffer.class);
 		return retVal;
 	}

@@ -509,14 +509,14 @@ public class HBaseUtils
 	}
 
 	public static byte[] removeUniqueId(
-			final byte[] row ) {
+			final byte[] rowId ) {
 
-		final GeoWaveRowImpl rowId = new GeoWaveRowImpl(
-				row);
-		byte[] dataId = rowId.getDataId();
+		final GeoWaveRowImpl tempRow = new GeoWaveRowImpl(
+				rowId);
+		byte[] dataId = tempRow.getDataId();
 
 		if ((dataId.length < UNIQUE_ADDED_BYTES) || (dataId[dataId.length - UNIQUE_ADDED_BYTES] != UNIQUE_ID_DELIMITER)) {
-			return row;
+			return rowId;
 		}
 
 		dataId = Arrays.copyOfRange(
@@ -526,8 +526,8 @@ public class HBaseUtils
 
 		return new GeoWaveRowImpl(
 				dataId,
-				rowId.getAdapterId(),
-				rowId.getIndex(),
-				rowId.getNumberOfDuplicates()).getRowId();
+				tempRow.getAdapterId(),
+				tempRow.getIndex(),
+				tempRow.getNumberOfDuplicates()).getRowId();
 	}
 }

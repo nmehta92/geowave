@@ -1,8 +1,8 @@
 package mil.nga.giat.geowave.datastore.cassandra;
 
 import java.io.Closeable;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.Level;
@@ -11,9 +11,7 @@ import org.apache.log4j.Logger;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 
-import javassist.bytecode.ByteArray;
 import mil.nga.giat.geowave.core.index.ByteArrayId;
-import mil.nga.giat.geowave.core.index.ByteArrayUtils;
 import mil.nga.giat.geowave.core.store.CloseableIterator;
 import mil.nga.giat.geowave.core.store.CloseableIteratorWrapper;
 import mil.nga.giat.geowave.core.store.DataStoreOperations;
@@ -31,6 +29,7 @@ import mil.nga.giat.geowave.core.store.callback.IngestCallback;
 import mil.nga.giat.geowave.core.store.callback.ScanCallback;
 import mil.nga.giat.geowave.core.store.data.visibility.DifferingFieldVisibilityEntryCount;
 import mil.nga.giat.geowave.core.store.entities.GeoWaveRow;
+import mil.nga.giat.geowave.core.store.entities.GeoWaveRowImpl;
 import mil.nga.giat.geowave.core.store.filter.DedupeFilter;
 import mil.nga.giat.geowave.core.store.index.IndexMetaDataSet;
 import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
@@ -51,10 +50,12 @@ import mil.nga.giat.geowave.datastore.cassandra.query.CassandraRowPrefixQuery;
 public class CassandraDataStore extends
 		BaseDataStore
 {
-	private final static Logger LOGGER = Logger.getLogger(CassandraDataStore.class);
+	private final static Logger LOGGER = Logger.getLogger(
+			CassandraDataStore.class);
 
 	static {
-		LOGGER.setLevel(Level.DEBUG);
+		LOGGER.setLevel(
+				Level.DEBUG);
 	}
 
 	private final CassandraOperations operations;
@@ -131,7 +132,7 @@ public class CassandraDataStore extends
 								return input.getBytes();
 							}
 						}).toArray(
-						new byte[][] {}),
+								new byte[][] {}),
 				adapter.getAdapterId().getBytes(),
 				authorizations);
 		return new CloseableIteratorWrapper<>(
@@ -277,7 +278,8 @@ public class CassandraDataStore extends
 
 		// FieldInfoList is a single composite FieldInfo at this point
 		if (fieldInfoList.size() < 1) {
-			LOGGER.error("Error ingesting data for Cassandra: Empty FieldInfoList!");
+			LOGGER.error(
+					"Error ingesting data for Cassandra: Empty FieldInfoList!");
 			return null;
 		}
 
@@ -288,6 +290,8 @@ public class CassandraDataStore extends
 		byte[] value = fieldInfoList.get(
 				0).getWrittenValue();
 
+		Iterator<ByteArrayId> rowIdIterator = ingestInfo.getRowIds().iterator();
+		
 		for (final ByteArrayId insertionId : ingestInfo.getInsertionIds()) {
 			byte[] uniqueDataId;
 			if (ensureUniqueId) {
@@ -299,15 +303,22 @@ public class CassandraDataStore extends
 				uniqueDataId = ingestInfo.getDataId();
 			}
 
-			rows.add(new CassandraRow(
-					new byte[] {
-						(byte) (counter++ % CassandraIndexWriter.PARTITIONS)
-					},
-					uniqueDataId,
-					adapterId,
-					insertionId.getBytes(),
-					fieldMask,
-					value));
+			// for each insertion(index) id, there's a matching rowId
+			// that contains the duplicate count
+			GeoWaveRowImpl tempRow = new GeoWaveRowImpl(rowIdIterator.next().getBytes());
+			int numDuplicates = tempRow.getNumberOfDuplicates();
+			
+			rows.add(
+					new CassandraRow(
+							new byte[] {
+								(byte) (counter++ % CassandraIndexWriter.PARTITIONS)
+							},
+							uniqueDataId,
+							adapterId,
+							insertionId.getBytes(),
+							fieldMask,
+							value,
+							numDuplicates));
 		}
 
 		return rows;
@@ -320,7 +331,8 @@ public class CassandraDataStore extends
 			final String columnFamily ) {
 		for (GeoWaveRow geowaveRow : rows) {
 			CassandraRow cassRow = (CassandraRow) geowaveRow;
-			((CassandraWriter) writer).write(cassRow);
+			((CassandraWriter) writer).write(
+					cassRow);
 		}
 	}
 }
