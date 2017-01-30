@@ -147,8 +147,8 @@ public class HBaseUtils
 		// decode the persistence model into the native data type
 		final PersistentDataset<CommonIndexValue> indexData = new PersistentDataset<CommonIndexValue>();
 		final PersistentDataset<Object> extendedData = new PersistentDataset<Object>();
-
 		final PersistentDataset<byte[]> unknownData = new PersistentDataset<byte[]>();
+		final CommonIndexModel indexModel = index.getIndexModel();
 
 		// for now we are assuming all entries in a row are of the same type
 		// and use the same adapter
@@ -186,7 +186,6 @@ public class HBaseUtils
 				adapterMatchVerified = true;
 			}
 			for (final Entry<byte[], NavigableMap<Long, byte[]>> cqEntry : cfEntry.getValue().entrySet()) {
-				final CommonIndexModel indexModel = index.getIndexModel();
 				byte[] byteValue = cqEntry.getValue().lastEntry().getValue();
 				byte[] qualifier = cqEntry.getKey();
 
