@@ -64,6 +64,7 @@ import mil.nga.giat.geowave.core.store.index.PrimaryIndex;
 import mil.nga.giat.geowave.core.store.metadata.AbstractGeowavePersistence;
 import mil.nga.giat.geowave.core.store.util.DataStoreUtils;
 import mil.nga.giat.geowave.datastore.accumulo.AccumuloOperations;
+import mil.nga.giat.geowave.datastore.accumulo.AccumuloRow;
 import mil.nga.giat.geowave.datastore.accumulo.AccumuloRowId;
 import mil.nga.giat.geowave.datastore.accumulo.BasicAccumuloOperations;
 import mil.nga.giat.geowave.datastore.accumulo.IteratorConfig;
@@ -324,8 +325,9 @@ public class AccumuloUtils
 				if (scanCallback != null) {
 					scanCallback.entryScanned(
 							pair.getRight(),
-							// TODO: wrap rowMapping as a NativeGeoWaveRow
-							null,
+							new AccumuloRow(
+									rowId.getRowId(),
+									fieldInfoList),
 							pair.getLeft());
 				}
 				return pair;
