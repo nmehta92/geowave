@@ -37,6 +37,7 @@ import mil.nga.giat.geowave.core.store.adapter.statistics.DataStatisticsStore;
 import mil.nga.giat.geowave.core.store.adapter.statistics.DuplicateEntryCount;
 import mil.nga.giat.geowave.core.store.adapter.statistics.RowRangeHistogramStatistics;
 import mil.nga.giat.geowave.core.store.adapter.statistics.StatisticsProvider;
+import mil.nga.giat.geowave.core.store.base.BaseDataStore;
 import mil.nga.giat.geowave.core.store.base.DataStoreEntryInfo;
 import mil.nga.giat.geowave.core.store.callback.IngestCallback;
 import mil.nga.giat.geowave.core.store.data.visibility.DifferingFieldVisibilityEntryCount;
@@ -164,6 +165,57 @@ abstract public class AbstractGeoWaveBasicVectorIT
 					expectedResults.count,
 					statisticsResult);
 		}
+	}
+	
+	protected void testBulkDelete(
+	        final URL savedFilterResource,
+            final PrimaryIndex index )
+            throws Exception {
+	    BaseDataStore.testBulkDelete = true;
+	    LOGGER.info("deleting from " + index.getId() + " index");
+        System.out.println("deleting from " + index.getId() + " index");
+        boolean success = false;
+        final mil.nga.giat.geowave.core.store.DataStore geowaveStore = getDataStorePluginOptions().createDataStore();
+        final DistributableQuery query = TestUtils.resourceToQuery(savedFilterResource);
+        
+        final CloseableIterator<?> actualResults;
+
+        actualResults = geowaveStore.query(
+                new QueryOptions(
+                        index),
+                query);
+
+        SimpleFeature testFeature = null;
+        while (actualResults.hasNext()) {
+            final Object obj = actualResults.next();
+            if ((testFeature == null) && (obj instanceof SimpleFeature)) {
+                testFeature = (SimpleFeature) obj;
+            }
+        }
+        actualResults.close();
+
+        if (testFeature != null) {
+            final ByteArrayId dataId = new ByteArrayId(
+                    testFeature.getID());
+            final ByteArrayId adapterId = new ByteArrayId(
+                    testFeature.getFeatureType().getTypeName());
+
+            if (geowaveStore.delete(
+                    new QueryOptions(),
+                    query)) {
+
+                success = !hasAtLeastOne(geowaveStore.query(
+                        new QueryOptions(
+                                adapterId,
+                                index.getId()),
+                        new DataIdQuery(
+                                adapterId,
+                                dataId)));
+            }
+        }
+        Assert.assertTrue(
+                "Unable to delete entry by data ID and adapter ID",
+                success);
 	}
 
 	protected void testDelete(
